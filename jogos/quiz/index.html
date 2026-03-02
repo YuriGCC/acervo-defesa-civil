@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="shortcut icon" href="imagens/LogoGirassolwebp.webp" type="image/x-icon">
+</head>
+
+<body>
+
+    <header id="cabecalho">
+
+        <h1>Quiz Teste</h1>
+
+        <div><img src="imagens/doguinha.png" alt="Mascote Amora sentada" id="mascote"></div>
+
+    </header>
+
+    <main id="princ">
+
+        <div id="pergunta">
+
+            <p id="questao">Qual o primeiro dia da semana?</p>
+
+            <div id="alternat">
+                <p class="opcoes">
+                    <button class="botao" onclick="selecionarOpcao(0)" id="b0">
+                        <span class="letra">A</span>
+                        <span class="alter" id="a1">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</span>
+                    </button>
+                </p>
+
+                <p class="opcoes">
+                    <button class="botao" onclick="selecionarOpcao(1)" id="b1">
+                        <span class="letra">B</span>
+                        <span class="alter" id="a2">aaaaaaaa</span>
+                    </button>
+                </p>
+
+                <p class="opcoes">
+                    <button class="botao" onclick="selecionarOpcao(2)" id="b2">
+                        <span class="letra">C</span>
+                        <span class="alter" id="a3">Alt 3</span>
+                    </button>
+                </p>
+
+                <p class="opcoes">
+                    <button class="botao" onclick="selecionarOpcao(3)" id="b3">
+                        <span class="letra">D</span>
+                        <span class="alter" id="a4">Alt 4</span>
+                    </button>
+                </p>
+
+            </div>
+
+            <div id="paiAmora">
+                <img src="imagens/dogbrincando.png" alt="Amora brincando" id="amora1" class="amoraPonto">
+
+                <img src="imagens/dogpata.png" alt="Amora sentada com a pata levantada" id="amora2" class="amoraPonto">
+
+                <img src="imagens/dogsentada.png" alt="Amora sentada" id="amora3" class="amoraPonto">
+            </div>
+
+            <div id="paiBotoes">
+                <button type="button" id="verificar" onclick="verificar()" class="b">Verificar</button>
+                
+                <button type="button" id="recomecar" onclick="window.location.reload()" class="b">Recomeçar</button>
+                
+                <button type="button" id="finalizar" class="b" onclick="finalizarJogo()">Finalizar</button>
+                
+                <button type="button" id="btn" onclick="enviar()" class="b">Próxima</button>
+            </div>
+
+
+
+        </div>
+
+
+
+    </main>
+
+    <footer id="pe">
+
+        &copy;
+
+    </footer>
+
+
+
+    <script src="js/js.js"></script>
+</body>
+
+</html>

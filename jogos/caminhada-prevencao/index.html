@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <title>Caminhada da Prevenção - Blumenau</title>
+    <script src="phaser.min.js"></script>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; }
+        canvas { display: block; margin: 0 auto; }
+        #imagem-fonte { display: none; }
+    </style>
+</head>
+
+<body>
+    <img id="imagem-fonte" src="tabuleiro.png">
+    <div id="game-container"></div>
+
+    <script>
+        const COORDENADAS = {
+            0: { x: 145, y: 205 }, 1: { x: 215, y: 245 }, 2: { x: 300, y: 250 },
+            3: { x: 380, y: 235 }, 4: { x: 460, y: 195 }, 5: { x: 540, y: 155 },
+            6: { x: 620, y: 135 }, 7: { x: 720, y: 145 }, 8: { x: 770, y: 205 },
+            9: { x: 740, y: 275 }, 10: { x: 680, y: 315 }, 11: { x: 600, y: 330 },
+            12: { x: 480, y: 340 }, 13: { x: 380, y: 340 }, 14: { x: 300, y: 335 },
+            15: { x: 230, y: 360 }, 16: { x: 140, y: 390 }, 17: { x: 120, y: 430 },
+            18: { x: 100, y: 500 }, 19: { x: 130, y: 550 }, 20: { x: 250, y: 560 },
+            21: { x: 330, y: 515 }, 22: { x: 400, y: 470 }, 23: { x: 450, y: 450 },
+            24: { x: 550, y: 420 }, 25: { x: 640, y: 400 }, 26: { x: 720, y: 450 },
+            27: { x: 750, y: 520 }, 28: { x: 710, y: 590 }, 29: { x: 660, y: 620 },
+            30: { x: 570, y: 660 }, 31: { x: 500, y: 670 }, 32: { x: 430, y: 665 },
+            33: { x: 350, y: 665 }, 34: { x: 300, y: 665 }, 35: { x: 210, y: 665 }
+        };
+
+        const MAPA_CASAS = {
+            1: { texto: "Aconteceu um deslizamento e você ligou 199. Pule três casas.", efeito: 3 },
+            3: { texto: "Encostas cheias de lixo e entulho! Todos os jogadores voltam uma casa.", efeito: -1 },
+            4: { texto: "Plano de contingência atualizado, família preparada! Pule uma casa.", efeito: 1 },
+            7: { texto: "Chove muito! Você acompanha o nível do Rio no ALERTABLU. Avance uma casa.", efeito: 1 },
+            10: { texto: "Aprendeu o lema: 'Defesa Civil, Somos Todos Nós!' Pule duas casas.", efeito: 2 },
+            11: { texto: "Descumpriu as normas e voltou para a casa interditada. Volte três casas.", efeito: -3 },
+            14: { texto: "O lixo jogado no chão entupiu o bueiro e causou alagamento. Volte ao início.", irPara: 0 },
+            16: { texto: "Plantou bananeiras na encosta. Fique uma rodada sem jogar.", pularRodada: true },
+            19: { texto: "Calhas limpas! Avance uma casa.", efeito: 1 },
+            22: { texto: "Rachaduras no muro! Volte quatro casas.", efeito: -4 },
+            23: { texto: "Consultou a Defesa Civil! Avance uma casa.", efeito: 1 },
+            27: { texto: "Plantou raízes profundas! Pule uma casa.", efeito: 1 },
+            29: { texto: "Pesquisou cota de cheia! Avance uma casa!", efeito: 1 },
+            31: { texto: "Identificou sinais de deslizamento. Jogue mais uma vez.", jogueNovamente: true },
+            34: { texto: "Construiu em área de risco! Volte para a casa 25.", irPara: 25 }
+        };
+
+        const OFFSETS = [
+            { dx: -25, dy: -25 }, { dx: 25, dy: -25 },
+            { dx: -25, dy: 25 }, { dx: 25, dy: 25 }
+        ];
+
+        class Menu extends Phaser.Scene {
+            constructor() { super({ key: 'Menu' }); }
+            create() {
+                const { width, height } = this.sys.game.config;
+                this.add.text(width / 2, 150, 'CAMINHADA DA PREVENÇÃO', { fontSize: '60px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+                this.add.text(width / 2, 250, 'Quantos agentes mirins vão jogar?', { fontSize: '32px', fill: '#ffcc00' }).setOrigin(0.5);
+                [2, 3, 4].forEach((num, i) => {
+                    let btn = this.add.circle(width / 2 - 200 + (i * 200), 450, 80, 0x005599).setInteractive();
+                    this.add.text(width / 2 - 200 + (i * 200), 450, num, { fontSize: '48px', fill: '#fff' }).setOrigin(0.5);
+                    btn.on('pointerdown', () => this.scene.start('Tabuleiro', { numJogadores: num }));
+                });
+            }
+        }
+
+        class Tabuleiro extends Phaser.Scene {
+            constructor() { super({ key: 'Tabuleiro' }); }
+            init(data) {
+                this.numJogadores = data.numJogadores;
+                this.turno = 0;
+                this.jogadores = [];
+                this.estaMovendo = false;
+            }
+            preload() {
+                const imgElement = document.getElementById('imagem-fonte');
+                this.textures.addImage('tabuleiroImg', imgElement);
+            }
+            create() {
+                this.add.image(640, 360, 'tabuleiroImg').setDisplaySize(1280, 720);
+                
+                const cores = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
+                for (let i = 0; i < this.numJogadores; i++) {
+                    let p = this.add.circle(COORDENADAS[0].x + OFFSETS[i].dx, COORDENADAS[0].y + OFFSETS[i].dy, 18, cores[i]).setStrokeStyle(2, 0xffffff);
+                    this.jogadores.push({ sprite: p, posicao: 0, bloqueado: false });
+                }
+
+                this.containerDado = this.add.container(640, 360); 
+                this.fundoDado = this.add.rectangle(0, 0, 150, 150, 0xffffff).setStrokeStyle(6, 0x333333);
+                this.txtDado = this.add.text(0, 0, '?', { fontSize: '80px', fill: '#000', fontWeight: 'bold' }).setOrigin(0.5);
+                this.containerDado.add([this.fundoDado, this.txtDado]);
+                this.containerDado.setAlpha(0);
+                this.containerDado.setDepth(100); 
+
+                this.txtTurno = this.add.text(640, 40, `Vez do Jogador 1`, { fontSize: '28px', backgroundColor: '#005599', padding: 10 }).setOrigin(0.5);
+                this.input.on('pointerdown', () => { if (!this.estaMovendo) this.animarDado(); });
+            }
+
+            animarDado() {
+                this.estaMovendo = true;
+                
+                this.tweens.add({
+                    targets: this.containerDado,
+                    alpha: 1,
+                    scale: 1.2,
+                    duration: 200,
+                    ease: 'Back.easeOut'
+                });
+
+                let giros = 0;
+                const maxGiros = 12;
+                
+                this.time.addEvent({
+                    delay: 80,
+                    repeat: maxGiros,
+                    callback: () => {
+                        const valorTemp = Phaser.Math.Between(1, 6);
+                        this.txtDado.setText(valorTemp);
+                        this.fundoDado.setAngle(Phaser.Math.Between(-15, 15));
+                        
+                        giros++;
+                        if (giros > maxGiros) {
+                            const valorFinal = Phaser.Math.Between(1, 6);
+                            this.txtDado.setText(valorFinal);
+                            this.fundoDado.setAngle(0);
+                            
+                            this.time.delayedCall(800, () => {
+                                this.tweens.add({
+                                    targets: this.containerDado,
+                                    alpha: 0,
+                                    scale: 0.5,
+                                    duration: 300,
+                                    onComplete: () => this.moverJogador(this.turno, valorFinal)
+                                });
+                            });
+                        }
+                    }
+                });
+            }
+
+            moverJogador(id, casas) {
+                let j = this.jogadores[id];
+                let novaPos = Math.min(j.posicao + casas, 35);
+                const off = OFFSETS[id];
+
+                this.tweens.add({
+                    targets: j.sprite,
+                    x: (COORDENADAS[novaPos]?.x || COORDENADAS[0].x) + off.dx,
+                    y: (COORDENADAS[novaPos]?.y || COORDENADAS[0].y) + off.dy,
+                    duration: 800,
+                    onComplete: () => {
+                        j.posicao = novaPos;
+                        this.verificarRegra(id);
+                    }
+                });
+            }
+
+            verificarRegra(id) {
+                let j = this.jogadores[id];
+                let regra = MAPA_CASAS[j.posicao];
+
+                if (regra) {
+                    alert(regra.texto);
+                    if (regra.irPara !== undefined) {
+                        j.posicao = regra.irPara;
+                        const off = OFFSETS[id];
+                        j.sprite.setPosition(COORDENADAS[j.posicao].x + off.dx, COORDENADAS[j.posicao].y + off.dy);
+                    } else if (regra.efeito) {
+                        this.moverJogador(id, regra.efeito);
+                        return;
+                    } else if (regra.pularRodada) {
+                        j.bloqueado = true;
+                    } else if (regra.jogueNovamente) {
+                        this.estaMovendo = false;
+                        return;
+                    }
+                }
+
+                if (j.posicao >= 35) {
+                    alert("Parabéns Agente Mirim! Você concluiu a Caminhada da Prevenção!");
+                    this.scene.start('Menu');
+                } else {
+                    this.proximoTurno();
+                }
+            }
+
+            proximoTurno() {
+                this.turno = (this.turno + 1) % this.numJogadores;
+                if (this.jogadores[this.turno].bloqueado) {
+                    this.jogadores[this.turno].bloqueado = false;
+                    this.proximoTurno();
+                } else {
+                    this.txtTurno.setText(`Vez do Jogador ${this.turno + 1}`);
+                    this.estaMovendo = false;
+                }
+            }
+        }
+
+        const config = {
+            type: Phaser.CANVAS,
+            width: 1280,
+            height: 720,
+            parent: 'game-container',
+            scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+            scene: [Menu, Tabuleiro]
+        };
+        new Phaser.Game(config);
+    </script>
+</body>
+</html>
