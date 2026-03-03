@@ -1,0 +1,21 @@
+{
+    "short_name": "Acervo Defesa Civil",
+    "name": "Jogos Educativos - Defesa Civil",
+    "icons": [
+      {
+        "src": "assets/favicons/android-icon-192x192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "assets/favicons/android-icon-512x512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+    "start_url": "index.html",
+    "background_color": "#2c3e50",
+    "display": "standalone",
+    "orientation": "landscape",
+    "theme_color": "#27ae60"
+}
