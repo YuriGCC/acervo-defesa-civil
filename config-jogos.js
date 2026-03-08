@@ -30,6 +30,14 @@ const LISTA_JOGOS = [
         caminho: 'jogos/caminhada-prevencao/index.html',
         cor: 0xe67e22,
         icone: 'assets/icone-caminhada.png'
+    },
+    {
+        id: 'jogo-associacao-defesa-civil',
+        nome: 'Jogo de associação',
+        caminho: 'jogos/jogo-associacao-defesa-civil/index.html',
+        cor: 0x4facfe,
+        icone: 'assets/icone-jogo-associacao.png'
+
     }
 ];
 

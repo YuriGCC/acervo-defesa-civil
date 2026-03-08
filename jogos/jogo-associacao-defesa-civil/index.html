@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Associação - Defesa Civil</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <button class="btn-back" id="btnBack" title="Voltar ao Menu">
+                ← Menu
+            </button>
+            <h1>🛡️ Defesa Civil - Jogo de Associação</h1>
+            <div class="score-board">
+                <span class="score">Pontos: <strong id="score">0</strong></span>
+                <span class="level">Nível: <strong id="level">1</strong></span>
+            </div>
+        </header>
+
+        <div class="intro-screen" id="introScreen">
+            <div class="intro-content">
+                <div class="logo">
+                    <img src="assets/logo_defesa_civil.png" alt="Logo Defesa Civil" class="logo-image">
+                </div>
+                <h2>Bem-vindo, Pequeno Protetor!</h2>
+                <p>A Defesa Civil precisa da sua ajuda para proteger nossa comunidade!</p>
+                <p>Associe cada situação de risco com a atitude correta de prevenção.</p>
+                <button class="btn-start" id="btnStart">Começar Missão</button>
+            </div>
+        </div>
+
+        <div class="game-screen hidden" id="gameScreen">
+            <div class="instruction">
+                <p id="instruction">Arraste as atitudes corretas para as situações de risco!</p>
+            </div>
+
+            <div class="game-board">
+                <canvas id="connectionsCanvas" class="connections-canvas"></canvas>
+                
+                <div class="risks-column">
+                    <h3>⚠️ Situações de Risco</h3>
+                    <div id="risksContainer" class="cards-container"></div>
+                </div>
+
+                <div class="actions-column">
+                    <h3>✅ Atitudes Corretas</h3>
+                    <div id="actionsContainer" class="cards-container"></div>
+                </div>
+
+            </div>
+
+            <div class="feedback hidden" id="feedback"></div>
+        </div>
+
+        <div class="completion-screen hidden" id="completionScreen">
+            <div class="completion-content">
+                <h2>🎉 Parabéns, Protetor da Comunidade!</h2>
+                <p class="final-score">Você fez <strong id="finalScore">0</strong> pontos!</p>
+                <p class="message" id="completionMessage"></p>
+                <button class="btn-restart" id="btnRestart">Jogar Novamente</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
