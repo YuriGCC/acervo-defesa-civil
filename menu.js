@@ -20,6 +20,8 @@ class Menu extends Phaser.Scene {
     preload() {
         this.load.image('fundo-menu', 'assets/imagem-fundo.png');
 
+        this.load.image('intro-parceria', 'assets/intro.jpeg');
+
         LISTA_JOGOS.forEach(jogo => {
             if (jogo.icone) {
                 this.load.image(jogo.id, jogo.icone);
@@ -30,6 +32,26 @@ class Menu extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
 
+        let splash = this.add.image(width / 2, height / 2, 'intro-parceria');
+        splash.setDisplaySize(width, height);
+        splash.setDepth(100); // Garante que fique por cima de tudo
+
+        this.cameras.main.fadeIn(1000, 0, 0, 0);
+
+        this.time.delayedCall(5000, () => {
+            this.tweens.add({
+                targets: splash,
+                alpha: 0,
+                duration: 1000,
+                onComplete: () => {
+                    splash.destroy(); // Remove a imagem da memória
+                    this.renderizarInterfaceMenu(width, height);
+                }
+            });
+        });
+    }
+
+    renderizarInterfaceMenu(width, height) {
         let background = this.add.image(width / 2, height / 2, 'fundo-menu');
         background.setDisplaySize(width, height);
         background.setAlpha(0.8);
@@ -55,7 +77,6 @@ class Menu extends Phaser.Scene {
 
         const botaoFundo = this.add.rectangle(x, y, 350, 200, jogo.cor)
             .setInteractive({ useHandCursor: true });
-
 
         if (this.textures.exists(jogo.id)) {
             const icone = this.add.image(x, y - 30, jogo.id);
