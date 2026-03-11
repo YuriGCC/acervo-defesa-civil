@@ -4,8 +4,6 @@
  * 
  * * -------------------------------------------------------------------------
  * @id      [String]  Identificador único interno. Use letras minúsculas e hífens.
- * Importante: Deve ser o mesmo nome do arquivo de imagem (sem a extensão)
- * para que o sistema de carregamento automático funcione.
  * * @nome    [String]  Título que aparecerá escrito no botão para entrar no jogo.
  * * @caminho [String]  O endereço do arquivo 'index.html' do jogo.
  * O caminho deve ser relativo à raiz do projeto.
@@ -37,7 +35,34 @@ const LISTA_JOGOS = [
         caminho: 'jogos/jogo-associacao-defesa-civil/index.html',
         cor: 0x4facfe,
         icone: 'assets/icone-jogo-associacao.png'
-
+    },
+    {
+        id: 'arrasta-solta',
+        nome: 'Arrasta Solta',
+        caminho: 'jogos/arrasta-solta/index.html',
+        cor: 0x3498db,
+        icone: 'assets/icone-arrasta-solta.png'
+    },
+    {
+        id: 'jogo-memoria',
+        nome: 'Jogo da Memória',
+        caminho: 'jogos/jogo-memoria/index.html',
+        cor: 0x9b59b6,
+        icone: 'assets/icone-jogo-memoria.png'
+    },
+    {
+        id: 'pe-de-vento',
+        nome: 'Pé de Vento',
+        caminho: 'jogos/pe-de-vento/index.html',
+        cor: 0xe67e22,
+        icone: 'assets/icone-pe-de-vento.png'
+    },
+    {
+        id: 'separar-lixo',
+        nome: 'Separar Lixo',
+        caminho: 'jogos/separar-lixo/index.html',
+        cor: 0x27ae60,
+        icone: 'assets/icone-separar-lixo.png'
     }
 ];
 

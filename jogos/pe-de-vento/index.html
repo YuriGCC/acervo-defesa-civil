@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Pé de Vento</title>
+    <script src="../../phaser.min.js"></script>
+    <style> body { margin: 0; background: #000; } </style>
+</head>
+<body>
+    <script type="module">
+        import PeDeVento from './PeDeVento.js';
+        const config = {
+            type: Phaser.AUTO,
+            width: 1920,
+            height: 1080,
+            input: {
+                activePointers: 3,
+                touch: { capture: true }
+            },
+            scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+            scene: [PeDeVento]
+        };
+        new Phaser.Game(config);
+    </script>
+</body>
+</html>

@@ -15,11 +15,13 @@
 class Menu extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuCena' });
+        this.paginaAtual = 0;
+        this.jogosPorPagina = 6;
+        this.botoesGrupo = null; // Grupo para facilitar a limpeza da página
     }
 
     preload() {
         this.load.image('fundo-menu', 'assets/imagem-fundo.png');
-
         this.load.image('intro-parceria', 'assets/intro.jpeg');
 
         LISTA_JOGOS.forEach(jogo => {
@@ -31,80 +33,130 @@ class Menu extends Phaser.Scene {
 
     create() {
         const { width, height } = this.scale;
-
-        let splash = this.add.image(width / 2, height / 2, 'intro-parceria');
-        splash.setDisplaySize(width, height);
-        splash.setDepth(100); // Garante que fique por cima de tudo
+        let splash = this.add.image(width / 2, height / 2, 'intro-parceria').setDisplaySize(width, height).setDepth(100);
 
         this.cameras.main.fadeIn(1000, 0, 0, 0);
 
-        this.time.delayedCall(5000, () => {
+        this.time.delayedCall(3000, () => {
             this.tweens.add({
                 targets: splash,
                 alpha: 0,
                 duration: 1000,
                 onComplete: () => {
-                    splash.destroy(); // Remove a imagem da memória
-                    this.renderizarInterfaceMenu(width, height);
+                    splash.destroy();
+                    this.renderizarInterfaceMenu();
                 }
             });
         });
     }
 
-    renderizarInterfaceMenu(width, height) {
-        let background = this.add.image(width / 2, height / 2, 'fundo-menu');
-        background.setDisplaySize(width, height);
-        background.setAlpha(0.8);
-        background.setTint(0x444444);
-
-        this.add.text(width / 2, 80, 'ACERVO DE JOGOS - DEFESA CIVIL', {
-            fontSize: '48px',
-            fill: '#ffffff',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
-
-        LISTA_JOGOS.forEach((jogo, index) => {
-            this.criarBotaoJogo(jogo, index, width, height);
-        });
-    }
-
-    criarBotaoJogo(jogo, index, width, height) {
-        const colunas = 2;
-        const espacamentoX = 400;
-        const espacamentoY = 250;
-        const x = (width / 2 - espacamentoX / 2) + (index % colunas) * espacamentoX;
-        const y = 300 + Math.floor(index / colunas) * espacamentoY;
-
-        const botaoFundo = this.add.rectangle(x, y, 350, 200, jogo.cor)
-            .setInteractive({ useHandCursor: true });
-
-        if (this.textures.exists(jogo.id)) {
-            const icone = this.add.image(x, y - 30, jogo.id);
-            icone.setDisplaySize(100, 100);
+    renderizarInterfaceMenu() {
+        const { width, height } = this.scale;
+        
+        if (!this.background) {
+            this.background = this.add.image(width / 2, height / 2, 'fundo-menu')
+                .setDisplaySize(width, height)
+                .setAlpha(0.6).setTint(0x222222);
         }
 
-        const textoBotao = this.add.text(x, y + 50, jogo.nome, {
-            fontSize: '24px',
-            fill: '#fff',
-            fontWeight: 'bold'
-        }).setOrigin(0.5);
+        if (this.botoesGrupo) {
+            this.botoesGrupo.clear(true, true);
+        }
+        this.botoesGrupo = this.add.group();
 
-        botaoFundo.on('pointerdown', () => {
-            botaoFundo.setScale(0.95);
-            this.iniciarTrocaDeJogo(jogo);
+        const inicio = this.paginaAtual * this.jogosPorPagina;
+        const fim = inicio + this.jogosPorPagina;
+        const jogosDaPagina = LISTA_JOGOS.slice(inicio, fim);
+
+        jogosDaPagina.forEach((jogo, index) => {
+            this.criarBotaoJogo(jogo, index);
         });
 
-        botaoFundo.on('pointerup', () => botaoFundo.setScale(1));
+        this.criarNavegacao();
+    }
+
+    criarBotaoJogo(jogo, index) {
+        const { width } = this.scale;
+        const colunas = 3;
+        const larguraBotao = 400;
+        const alturaBotao = 260;
+        const espacamentoX = 520;
+        const espacamentoY = 340;
+
+        const offsetX = (width - (espacamentoX * (colunas - 1))) / 2;
+        const x = offsetX + (index % colunas) * espacamentoX;
+        const y = 350 + Math.floor(index / colunas) * espacamentoY;
+
+        const container = this.add.container(x, y);
+
+        const fundo = this.add.rectangle(0, 0, larguraBotao, alturaBotao, jogo.cor)
+            .setInteractive({ useHandCursor: true })
+            .setStrokeStyle(6, 0xffffff, 0.8);
+
+        const texto = this.add.text(0, 85, jogo.nome.toUpperCase(), {
+            fontSize: '32px',
+            fontFamily: 'Arial Black',
+            fill: '#fff',
+            stroke: '#000',
+            strokeThickness: 8,
+            align: 'center',
+            wordWrap: { width: larguraBotao - 40 }
+        }).setOrigin(0.5);
+
+        container.add(fundo);
+        container.add(texto);
+
+        if (this.textures.exists(jogo.id)) {
+            const icone = this.add.image(0, -40, jogo.id).setDisplaySize(140, 140);
+            container.add(icone);
+        }
+
+        fundo.on('pointerdown', () => {
+            container.setScale(0.9);
+            this.time.delayedCall(100, () => this.iniciarTrocaDeJogo(jogo));
+        });
+
+        fundo.on('pointerup', () => container.setScale(1));
+        
+        this.botoesGrupo.add(container);
+    }
+
+    criarNavegacao() {
+        const { width, height } = this.scale;
+        const totalPaginas = Math.ceil(LISTA_JOGOS.length / this.jogosPorPagina);
+
+        if (this.paginaAtual > 0) {
+            this.criarSetaNavegacao(100, height / 2, 'Anterior', -1);
+        }
+
+        if (this.paginaAtual < totalPaginas - 1) {
+            this.criarSetaNavegacao(width - 100, height / 2, 'Próximo', 1);
+        }
+    }
+
+    criarSetaNavegacao(x, y, label, direcao) {
+        const setaContainer = this.add.container(x, y);
+        
+        const circulo = this.add.circle(0, 0, 60, 0xffffff, 0.2)
+            .setInteractive({ useHandCursor: true })
+            .setStrokeStyle(4, 0xffffff);
+            
+        const textoSeta = this.add.text(0, 80, label, { fontSize: '24px', fontWeight: 'bold' }).setOrigin(0.5);
+        
+        const iconeSeta = this.add.text(0, 0, direcao > 0 ? '>' : '<', { fontSize: '60px', fontWeight: 'bold' }).setOrigin(0.5);
+
+        setaContainer.add([circulo, textoSeta, iconeSeta]);
+
+        circulo.on('pointerdown', () => {
+            this.paginaAtual += direcao;
+            this.renderizarInterfaceMenu();
+        });
+
+        this.botoesGrupo.add(setaContainer);
     }
 
     iniciarTrocaDeJogo(jogo) {
-        console.log(`Lançando: ${jogo.nome}`);
-
-        window.ponte.emitir('TROCAR_JOGO', {
-            caminho: jogo.caminho,
-            nome: jogo.nome
-        });
-
+        window.ponte.emitir('TROCAR_JOGO', { caminho: jogo.caminho, nome: jogo.nome });
         this.scene.pause();
         this.cameras.main.fadeOut(500, 0, 0, 0);
     }

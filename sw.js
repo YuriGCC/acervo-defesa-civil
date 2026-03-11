@@ -19,8 +19,9 @@ const ASSETS_CACHE = [
     'manifest.json',
     'phaser.min.js',
     'assets/icone-uniasselvi.png',
+    'assets/imagem-fundo.png',
+    'assets/intro.jpeg',       
     'assets/favicons/android-icon-192x192.png',
-    'assets/favicons/android-icon-512x512.png',
     'assets/favicons/favicon-32x32.png',
 ];
 

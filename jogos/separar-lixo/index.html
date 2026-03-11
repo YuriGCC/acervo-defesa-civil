@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Coleta Seletiva</title>
+    
+    <script src="../../phaser.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import SepararLixo from './SepararLixo.js';
+    
+        const config = {
+            type: Phaser.AUTO,
+            width: 1920, 
+            height: 1080,
+            backgroundColor: '#1a1a1a',
+            input: {
+                activePointers: 3, 
+                touch: {
+                    capture: true
+                }
+            },
+            physics: {
+                default: 'arcade',
+                arcade: { debug: false }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            scene: [SepararLixo]
+        };
+    
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>

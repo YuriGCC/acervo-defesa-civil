@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Treinamento Defesa Civil</title>
+
+    <script src="../../phaser.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #1d212d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script type="module">
+        import ArrastaSolta from './ArrastaSolta.js';
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 1920,
+            height: 1080,
+            backgroundColor: '#1d212d',
+            input: {
+                activePointers: 3,
+                touch: {
+                    capture: true
+                }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            scene: [ArrastaSolta]
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+
+</html>
