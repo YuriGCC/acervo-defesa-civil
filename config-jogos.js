@@ -63,6 +63,13 @@ const LISTA_JOGOS = [
         caminho: 'jogos/separar-lixo/index.html',
         cor: 0x27ae60,
         icone: 'assets/icone-separar-lixo.png'
+    },
+    {
+        id: 'caca-palavras',
+        nome: 'Caça-Palavras',
+        caminho: 'jogos/caca-palavras/index.html',
+        cor: 0x16a085,
+        icone: 'assets/icone_caca_palavras.png'
     }
 ];
 

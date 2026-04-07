@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caça-Palavras - Defesa Civil</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <button class="btn-back">← SAIR</button>
+            <h1>🔍 Caça-Palavras da Defesa Civil</h1>
+            <div class="score-board">
+                <span>PALAVRAS: <strong id="foundCount">0</strong>/<strong id="totalCount">0</strong></span>
+            </div>
+        </header>
+
+        <div class="intro-screen" id="introScreen">
+            <div class="intro-content">
+                <div class="intro-icon">🛡️</div>
+                <h2>Caça-Palavras</h2>
+                <p>Encontre palavras sobre prevenção e defesa civil!</p>
+                <p class="hint-text">Selecione as letras na grade para formar as palavras da lista.</p>
+                <button class="btn-start" id="btnStart">COMEÇAR</button>
+            </div>
+        </div>
+
+        <div class="game-screen hidden" id="gameScreen">
+            <div class="game-layout">
+                <div class="grid-area">
+                    <div id="wordGrid" class="word-grid"></div>
+                    <div class="selected-word-bar">
+                        <span class="label">Selecionado:</span>
+                        <span id="selectedWord" class="selected-display">—</span>
+                        <button id="btnClear" class="btn-clear">✕</button>
+                    </div>
+                </div>
+                <div class="words-panel">
+                    <h3>📋 Palavras para encontrar</h3>
+                    <div id="wordList" class="word-list"></div>
+                    <div class="tip-box" id="tipBox"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="completion-screen hidden" id="completionScreen">
+            <div class="completion-content">
+                <div style="font-size:4em">🎉</div>
+                <h2>PARABÉNS!</h2>
+                <p>Você encontrou todas as palavras!</p>
+                <p class="completion-msg">Você é um verdadeiro agente da Defesa Civil!</p>
+                <button class="btn-restart" id="btnRestart">JOGAR NOVAMENTE</button>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
