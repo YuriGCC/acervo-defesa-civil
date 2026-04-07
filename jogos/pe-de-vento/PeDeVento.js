@@ -235,6 +235,7 @@ export default class PeDeVento extends Phaser.Scene {
     }
 
     voltarAoAcervo() {
+        this.game.destroy(true, false);
         if (window.parent && window.parent.ponte) {
             window.parent.ponte.emitir('VOLTAR_MENU');
         }

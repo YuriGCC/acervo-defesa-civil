@@ -73,8 +73,8 @@ export default class ArrastaSolta extends Phaser.Scene {
 
         const leftColumnX = width * 0.28;
         const rightColumnX = width * 0.72;
-        const zoneWidth = 550;
-        const zoneHeight = 280;
+        const zoneWidth = 600;
+        const zoneHeight = 320;
 
         this.pergunta = this.add.text(width / 2, height * 0.1, 'Carregando...', {
             fontSize: '52px',
@@ -257,6 +257,8 @@ export default class ArrastaSolta extends Phaser.Scene {
     }
 
     sairDaCena() {
+        this.game.destroy(true, false);
+
         if (window.parent && window.parent.ponte) {
             window.parent.ponte.emitir('VOLTAR_MENU');
         }

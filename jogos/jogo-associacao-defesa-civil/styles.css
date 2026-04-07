@@ -6,6 +6,26 @@
     user-select: none;
 }
 
+:root {
+    font-size: 14px;
+}
+
+@media (min-width: 480px) {
+    :root { font-size: 15px; }
+}
+
+@media (min-width: 768px) {
+    :root { font-size: 16px; }
+}
+
+@media (min-width: 1024px) {
+    :root { font-size: 18px; }
+}
+
+@media (min-width: 1920px) {
+    :root { font-size: 24px; }
+}
+
 body {
     font-family: 'Comic Sans MS', 'Arial', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -14,16 +34,16 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: 0.4rem;
     overflow: hidden;
 }
 
 .game-container {
-    width: 98vw;
-    height: 98vh;
+    width: 99vw;
+    height: 99vh;
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -35,116 +55,132 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 1rem;
     background: radial-gradient(circle, #ffffff 0%, #f0f4ff 100%);
+    overflow-y: auto;
 }
 
 .intro-content {
-    max-width: 900px;
+    max-width: 50rem;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 15px;
+    gap: 0.8rem;
 }
 
 .logo-image {
-    width: 200px; /* Tamanho otimizado para TV */
+    width: clamp(6rem, 20vw, 12rem);
     height: auto;
-    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
-    margin-bottom: 10px;
+    filter: drop-shadow(0 0.3rem 1rem rgba(0,0,0,0.1));
 }
 
 .intro-content h2 {
-    font-size: 3.5em;
+    font-size: clamp(1.8rem, 5vw, 3.5rem);
     color: #667eea;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
     line-height: 1.1;
 }
 
 .intro-content p {
-    font-size: 1.8em;
+    font-size: clamp(0.9rem, 2.5vw, 1.5rem);
     color: #444;
-    max-width: 80%;
+    max-width: 90%;
 }
 
 .btn-start {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     color: white;
     border: none;
-    padding: 25px 80px;
-    font-size: 2.2em;
-    border-radius: 60px;
+    padding: clamp(0.8rem, 2vw, 1.5rem) clamp(1.5rem, 4vw, 3rem);
+    font-size: clamp(1.1rem, 3vw, 2rem);
+    border-radius: 3.5rem;
     cursor: pointer;
-    margin-top: 20px;
+    margin-top: 0.5rem;
     font-weight: bold;
-    box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+    box-shadow: 0 0.5rem 1.5rem rgba(245, 87, 108, 0.4);
     transition: transform 0.2s, box-shadow 0.2s;
+    touch-action: manipulation;
 }
 
 .btn-start:active {
     transform: scale(0.95);
-    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
 }
 
 /* --- HEADER DO JOGO --- */
 .game-header {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    padding: 10px 20px;
+    padding: 0.4rem 1rem;
     text-align: center;
     color: white;
     position: relative;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
 }
 
 .btn-back {
     position: absolute;
-    left: 20px;
+    left: 0.5rem;
     top: 50%;
     transform: translateY(-50%);
     background: rgba(255, 255, 255, 0.2);
     color: white;
-    border: 2px solid white;
-    padding: 8px 15px;
-    font-size: 1.1em;
-    border-radius: 25px;
+    border: 0.1rem solid white;
+    padding: 0.4rem 0.8rem;
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    border-radius: 1.5rem;
     cursor: pointer;
     font-weight: bold;
+    touch-action: manipulation;
+    white-space: nowrap;
 }
 
 .game-header h1 {
-    font-size: 1.8em;
-    margin-bottom: 2px;
+    font-size: clamp(0.8rem, 2.5vw, 1.5rem);
+    margin: 0;
+    padding: 0 5rem;
 }
 
 .score-board {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    font-size: 1.2em;
+    display: none;
+}
+
+@media (min-width: 480px) {
+    .score-board {
+        display: flex;
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        gap: 0.8rem;
+        font-size: clamp(0.7rem, 1.5vw, 1rem);
+    }
 }
 
 /* --- TELA DE JOGO ATIVO --- */
 .game-screen {
     flex: 1;
-    padding: 10px 20px;
+    padding: 0.4rem 0.6rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow: hidden;
 }
 
 .instruction {
     text-align: center;
-    padding: 8px;
+    padding: 0.3rem;
     background: #fff3cd;
-    border-radius: 10px;
-    margin-bottom: 10px;
+    border-radius: 0.5rem;
+    margin-bottom: 0.3rem;
     flex-shrink: 0;
 }
 
 .instruction p {
-    font-size: 1.2em;
+    font-size: clamp(0.75rem, 2vw, 1rem);
     color: #856404;
     font-weight: bold;
 }
@@ -153,7 +189,7 @@ body {
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 100px;
+    gap: clamp(0.5rem, 2vw, 2rem);
     position: relative;
     min-height: 0;
 }
@@ -170,62 +206,80 @@ body {
 
 .risks-column, .actions-column {
     background: #f8f9fa;
-    padding: 12px;
-    border-radius: 15px;
+    padding: clamp(0.4rem, 1vw, 0.8rem);
+    border-radius: 0.8rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
     z-index: 2;
+    overflow: hidden;
 }
 
 .risks-column h3, .actions-column h3 {
     text-align: center;
     color: #667eea;
-    margin-bottom: 10px;
-    font-size: 1.3em;
+    margin-bottom: 0.3rem;
+    font-size: clamp(0.75rem, 2vw, 1.2rem);
+    flex-shrink: 0;
 }
 
 .cards-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-    padding: 5px;
+    /* gap proporcional: com 7 cards em ~80vh disponível, gap menor evita overflow */
+    gap: clamp(0.1rem, 0.5vh, 0.4rem);
+    padding: 0.2rem;
     flex: 1;
+    min-height: 0;
+    /* Remove o scroll — os cards vão encolher para caber */
+    overflow: hidden;
 }
 
-.cards-container::-webkit-scrollbar { width: 8px; }
-.cards-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+.cards-container::-webkit-scrollbar { display: none; }
 
 /* --- CARDS --- */
 .card {
     background: white;
-    padding: 10px 15px;
-    border-radius: 12px;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-    border: 3px solid transparent;
+    padding: clamp(0.15rem, 0.8vh, 0.5rem) clamp(0.4rem, 1vw, 0.8rem);
+    border-radius: 0.6rem;
+    box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.1);
+    border: 0.15rem solid transparent;
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-height: 70px;
-    flex-shrink: 0;
+    gap: clamp(0.3rem, 1vw, 0.8rem);
+    /* flex: 1 faz cada card ocupar uma fração igual da altura disponível,
+       eliminando o scroll independente do número de pares do nível */
+    flex: 1;
+    min-height: 0;
     transition: all 0.2s ease;
+    cursor: grab;
+    touch-action: none;
 }
 
-.card-icon { font-size: 2.2em; flex-shrink: 0; }
-.card-text { font-size: 1.1em; color: #333; font-weight: bold; line-height: 1.1; }
+.card-icon {
+    font-size: clamp(0.9rem, 2.5vh, 1.8rem);
+    flex-shrink: 0;
+}
+
+.card-text {
+    font-size: clamp(0.6rem, 1.4vh, 0.95rem);
+    color: #333;
+    font-weight: bold;
+    line-height: 1.2;
+}
 
 .card.dragging {
     opacity: 1;
     background: #e7f3ff;
     border-color: #667eea;
     transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0.4rem 1rem rgba(102, 126, 234, 0.4);
     z-index: 1001;
+    cursor: grabbing;
 }
 
 .card.drop-zone {
-    border: 3px dashed #667eea !important;
+    border: 0.15rem dashed #667eea !important;
     background: #f0f7ff !important;
     transform: scale(1.02);
 }
@@ -234,13 +288,14 @@ body {
     background: #d4edda;
     border-color: #28a745;
     opacity: 0.8;
+    cursor: default;
 }
 
 .card.shake { animation: shake 0.5s; }
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-8px); }
-    75% { transform: translateX(8px); }
+    25% { transform: translateX(-0.4rem); }
+    75% { transform: translateX(0.4rem); }
 }
 
 .feedback {
@@ -248,15 +303,23 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 20px 40px;
-    border-radius: 15px;
-    font-size: 2em;
+    padding: 0.8rem 1.5rem;
+    border-radius: 1rem;
+    font-size: clamp(1rem, 3vw, 1.8rem);
     font-weight: bold;
     z-index: 2000;
+    text-align: center;
 }
 
-.feedback.correct { background: #28a745; color: white; }
-.feedback.incorrect { background: #dc3545; color: white; }
+/* WCAG 2.4.7: indicador de foco visível para navegação por teclado */
+*:focus-visible {
+    outline: 3px solid #FFD700;
+    outline-offset: 2px;
+}
+
+/* WCAG 1.4.3: feedback com contraste suficiente */
+.feedback.correct { background: #1e8449; color: white; } /* contraste 5.1:1 */
+.feedback.incorrect { background: #922b21; color: white; } /* contraste 5.4:1 */
 
 .completion-screen {
     flex: 1;
@@ -264,6 +327,8 @@ body {
     justify-content: center;
     align-items: center;
     background: #fff;
+    padding: 1rem;
+    overflow-y: auto;
 }
 
 .completion-content {
@@ -271,25 +336,36 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 1rem;
+}
+
+.completion-content h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
 }
 
 .btn-restart {
     background: #28a745;
     color: white;
     border: none;
-    padding: 20px 60px;
-    font-size: 1.8em;
-    border-radius: 50px;
+    padding: clamp(0.8rem, 2vw, 1.2rem) clamp(1.5rem, 4vw, 3rem);
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    border-radius: 3rem;
     cursor: pointer;
+    touch-action: manipulation;
 }
 
 .hidden { display: none !important; }
 
-@media (max-height: 720px) {
-    .intro-content h2 { font-size: 2.5em; }
-    .logo-image { width: 150px; }
-    .btn-start { font-size: 1.8em; padding: 20px 60px; }
-    .game-header h1 { font-size: 1.5em; }
-    .card { min-height: 60px; }
+/* Landscape mobile / telas baixas */
+@media (max-height: 500px) {
+    .game-header { min-height: 2.5rem; }
+    .card { min-height: 2.5rem; }
+    .card-icon { font-size: 1rem; }
+    .instruction { display: none; }
+}
+
+/* Telas muito pequenas em portrait */
+@media (max-width: 360px) {
+    .game-header h1 { font-size: 0.7rem; padding: 0 4rem; }
+    .card-text { font-size: 0.6rem; }
 }

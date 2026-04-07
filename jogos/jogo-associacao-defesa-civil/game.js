@@ -61,7 +61,13 @@ const canvas = document.getElementById('connectionsCanvas'), ctx = canvas.getCon
 document.getElementById('btnStart').addEventListener('click', startGame);
 document.getElementById('btnRestart').addEventListener('click', restartGame);
 window.addEventListener('resize', resizeCanvas);
-document.getElementById('btnBack').addEventListener('click', () => { if (confirm('Sair do jogo?')) window.location.href = '../../index.html'; });
+document.getElementById('btnBack').addEventListener('click', () => {
+    if (window.parent && window.parent.ponte) {
+        window.parent.ponte.emitir('VOLTAR_MENU');
+    } else if (confirm('Sair do jogo?')) {
+        window.location.href = '../../index.html';
+    }
+});
 
 function startGame() { introScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); resizeCanvas(); loadLevel(); }
 function restartGame() { currentLevel = 0; score = 0; matchedPairs = 0; connections = []; completionScreen.classList.add('hidden'); gameScreen.classList.remove('hidden'); updateScore(); loadLevel(); }
@@ -98,7 +104,11 @@ function createCard(data, type, pairId) {
     const card = document.createElement('div');
     card.className = `card ${type}`;
     card.dataset.pairId = pairId;
-    card.innerHTML = `<div class="card-icon">${data.icon}</div><div class="card-text">${data.text}</div>`;
+    // WCAG 4.1.2: role="button" + aria-label tornam o card acessível por teclado e leitores de tela
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', type === 'risk' ? '0' : '-1');
+    card.setAttribute('aria-label', `${type === 'risk' ? 'Situação' : 'Prevenção'}: ${data.text}`);
+    card.innerHTML = `<div class="card-icon" aria-hidden="true">${data.icon}</div><div class="card-text">${data.text}</div>`;
     return card;
 }
 
@@ -254,6 +264,8 @@ function drawBezier(r, a, boardRect, color, width) {
 function showFeedback(msg, type) {
     feedback.textContent = msg; feedback.className = `feedback ${type}`;
     feedback.classList.remove('hidden');
+    // WCAG 4.1.3: aria-live="assertive" anuncia o feedback imediatamente
+    feedback.setAttribute('aria-live', 'assertive');
     setTimeout(() => feedback.classList.add('hidden'), 1500);
 }
 

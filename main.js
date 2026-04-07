@@ -7,37 +7,48 @@
 const config = {
     type: Phaser.AUTO,
     parent: 'container-menu',
-    width: 1920,
-    height: 1080,
+
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: '100%',
+        height: '100%'
+    },
     input: {
         activePointers: 3,
         touch: {
-            capture: true 
+            capture: true
         }
     },
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
+    backgroundColor: '#000000',
     scene: [Menu]
 };
-
 
 const game = new Phaser.Game(config);
 
 /**
- * Listener: TROCAR_JOGO
- * @description Responsável por pausar o menu e injetar o Iframe do jogo escolhido no DOM.
- * @param {Object} dados - Contém o 'caminho' (URL) e 'nome' do jogo.
+ * Utilitário: anuncia mensagem para leitores de tela.
+ * Centralizado aqui para uso nos listeners de ponte.
+ * @param {string} msg
  */
+function anunciar(msg) {
+    const el = document.getElementById('aria-announcer');
+    if (!el) return;
+    el.textContent = '';
+    requestAnimationFrame(() => { el.textContent = msg; });
+}
 
+/**
+ * Listener: TROCAR_JOGO
+ * @description Pausa o menu e injeta o iframe do jogo escolhido no DOM.
+ * @param {Object} dados - { caminho: string, nome: string }
+ */
 window.ponte.quando('TROCAR_JOGO', (dados) => {
-    if (!dados || !dados.caminho) {
-        return;
-    }
+    if (!dados || !dados.caminho) return;
 
     const containerJogo = document.getElementById('container-jogo');
     const containerMenu = document.getElementById('container-menu');
+    const btnVoltar = document.getElementById('btn-voltar-menu');
 
     containerMenu.style.display = 'none';
     containerJogo.style.display = 'block';
@@ -49,29 +60,25 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
     iframe.style.height = '100%';
     iframe.style.border = 'none';
 
+    iframe.title = `Jogo: ${dados.nome}`;
+    iframe.setAttribute('aria-label', `Jogo em execução: ${dados.nome}`);
+
+    iframe.setAttribute('allow', 'autoplay');
+
     containerJogo.appendChild(iframe);
+
+    // Exibe botão de retorno acessível
+    if (btnVoltar) {
+        btnVoltar.style.display = 'block';
+        btnVoltar.focus();
+    }
+
+    anunciar(`Jogo "${dados.nome}" iniciado. Use o botão Voltar ao Menu para retornar.`);
 });
-
-
 
 /**
  * Listener: VOLTAR_MENU
  * @description Disparado pelos jogos via 'window.parent.ponte'.
- * Destrói o Iframe para liberar RAM e retoma a cena do Menu Principal.
+ * Destrói o iframe para liberar RAM e retoma a cena do Menu Principal.
  */
-window.ponte.quando('VOLTAR_MENU', () => {
-    const containerJogo = document.getElementById('container-jogo');
-    const containerMenu = document.getElementById('container-menu');
-
-    containerJogo.innerHTML = '';
-    containerJogo.style.display = 'none';
-
-    containerMenu.style.display = 'block';
-
-    const cenaMenu = game.scene.getScene('MenuCena');
-    if (cenaMenu) {
-        cenaMenu.scene.resume();
-        cenaMenu.cameras.main.fadeIn(500); // Efeito visual de volta
-    }
-});
-
+window.ponte.quando('VOLTAR_MENU', voltarAoMenu);

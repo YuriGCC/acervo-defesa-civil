@@ -166,15 +166,13 @@ function selecionarOpcao(indice){
     respostaSelecionada = indice;
     const todosBotoes = document.querySelectorAll('.botao');
 
-    todosBotoes.forEach(btn => {btn.classList.remove("botaoSelecionado")});
+    todosBotoes.forEach((btn, i) => {
+        btn.classList.remove("botaoSelecionado");
+        // WCAG 4.1.2: aria-pressed comunica estado de seleção para leitores de tela
+        btn.setAttribute('aria-pressed', i === indice ? 'true' : 'false');
+    });
 
     todosBotoes[indice].classList.add("botaoSelecionado");
-
-    console.log("Você escolheu a opção de indice: " + indice);
-
-
-
-
 }
 
 
@@ -191,7 +189,8 @@ function verificar(){
 
             botoes[respostaSelecionada].classList.add("botaoCerto");
             pontos++;
-            
+            // WCAG 4.1.3: anuncia resultado para leitores de tela
+            anunciarStatus('Resposta correta!');
 
         } else{
             botoes[respostaSelecionada].classList.add("botaoErrado");
@@ -199,28 +198,34 @@ function verificar(){
             perguntaAtual.alternativas.forEach((alt, indice) => {
                 if(alt.correto){
                     botoes[indice].classList.add("botaoCerto")
-            }
-
-            })
-
+                }
+            });
+            // WCAG 4.1.3: anuncia resultado para leitores de tela
+            anunciarStatus('Resposta incorreta. A resposta correta está destacada em verde.');
         }
 
         respostaSelecionada = -1;
-
+        // Reseta aria-pressed em todos os botões após verificação
+        document.querySelectorAll('.botao').forEach(btn => btn.setAttribute('aria-pressed', 'false'));
     }
 
     document.getElementById("verificar").disabled = true;
 
     const elementos = document.querySelectorAll('.botao');
-
     elementos.forEach(btn => btn.disabled = true);
-
-
 }
 
 function finalizarJogo() {
     if (window.parent && window.parent.ponte) {
         window.parent.ponte.emitir('VOLTAR_MENU');
     }
+}
+
+// WCAG 4.1.3: anuncia mensagens de status para leitores de tela
+function anunciarStatus(msg) {
+    const el = document.getElementById('aria-status');
+    if (!el) return;
+    el.textContent = '';
+    requestAnimationFrame(() => { el.textContent = msg; });
 }
 

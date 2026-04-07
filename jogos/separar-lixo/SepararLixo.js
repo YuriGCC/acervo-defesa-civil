@@ -33,7 +33,6 @@ export default class SepararLixo extends Phaser.Scene {
     create() {
         const { width, height } = this.scale;
         
-        // --- 1. TÍTULOS E TEXTOS EDUCATIVOS ---
         this.add.text(width / 2, 80, 'COLETA SELETIVA', { 
             fontSize: '84px', fill: '#fff', fontFamily: 'Arial Black' 
         }).setOrigin(0.5);
@@ -46,7 +45,6 @@ export default class SepararLixo extends Phaser.Scene {
             fontSize: '34px', fill: '#00ff00', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5);
 
-        // Animação de pulsação para atrair crianças
         this.tweens.add({
             targets: textoChamada,
             scale: 1.05,
@@ -55,7 +53,6 @@ export default class SepararLixo extends Phaser.Scene {
             loop: -1
         });
 
-        // --- 2. CRIAÇÃO DAS LIXEIRAS E ZONAS DE DROP ---
         const yPosLixeira = height * 0.78; 
         const chaves = Object.keys(this.configLixo);
         
@@ -77,7 +74,7 @@ export default class SepararLixo extends Phaser.Scene {
             }).setOrigin(0.5);
         });
 
-        // --- 3. EVENTOS DE INTERAÇÃO (DRAG AND DROP) ---
+        // EVENTOS DE INTERAÇÃO (DRAG AND DROP) ---
         this.input.on('dragstart', (pointer, lixo) => {
             lixo.setDepth(100);
             this.tweens.add({ targets: lixo, scale: 0.6, duration: 150, ease: 'Back.easeOut' });
@@ -108,7 +105,6 @@ export default class SepararLixo extends Phaser.Scene {
     }
 
     processarAcerto(lixo, zonaDrop, lixeiraImg) {
-        // Explosão de partículas com a própria textura do lixo
         const particles = this.add.particles(zonaDrop.x, zonaDrop.y, lixo.texture.key, {
             speed: { min: -250, max: 250 },
             angle: { min: 0, max: 360 },
@@ -136,7 +132,6 @@ export default class SepararLixo extends Phaser.Scene {
     }
 
     processarErro(lixo, lixeiraImg) {
-        // Feedback visual de erro na lixeira (tremer e cor vermelha)
         if (lixeiraImg) {
             lixeiraImg.setTint(0xff0000);
             this.tweens.add({
@@ -149,12 +144,12 @@ export default class SepararLixo extends Phaser.Scene {
             });
         }
 
-        // Lixo volta para a origem com efeito elástico
+        const escalaBase = Math.min(this.scale.width / 1920, this.scale.height / 1080) * 0.55;
         this.tweens.add({
             targets: lixo,
             x: lixo.getData('origemX'),
             y: lixo.getData('origemY'),
-            scale: 0.3,
+            scale: escalaBase,
             duration: 600,
             ease: 'Elastic.easeOut'
         });
@@ -178,6 +173,9 @@ export default class SepararLixo extends Phaser.Scene {
         const xPos = Phaser.Math.Between(width * 0.2, width * 0.8);
         const yPos = Phaser.Math.Between(height * 0.35, height * 0.55);
 
+        // Escala proporcional à resolução base (1920x1080)
+        const escalaBase = Math.min(width / 1920, height / 1080) * 0.55;
+
         const lixo = this.add.sprite(xPos, yPos, this.configLixo[tipoAleatorio].itemImg)
             .setData('tipo_lixo', tipoAleatorio)
             .setData('origemX', xPos)
@@ -186,7 +184,7 @@ export default class SepararLixo extends Phaser.Scene {
             .setScale(0);
 
         this.input.setDraggable(lixo);
-        this.tweens.add({ targets: lixo, scale: 0.3, duration: 450, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: lixo, scale: escalaBase, duration: 450, ease: 'Back.easeOut' });
         this.itensAtuais++;
     }
 
@@ -204,6 +202,7 @@ export default class SepararLixo extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(1001).setInteractive({ useHandCursor: true });
 
         btn.on('pointerdown', () => {
+            this.game.destroy(true, false);
             if (window.parent && window.parent.ponte) {
                 window.parent.ponte.emitir('VOLTAR_MENU');
             }

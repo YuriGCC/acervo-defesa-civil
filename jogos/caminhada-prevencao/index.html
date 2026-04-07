@@ -1,16 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Caminhada da Prevenção</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caminhada da Prevenção - Jogo de Tabuleiro</title>
     <script src="phaser.min.js"></script>
     <style>
-        body { margin: 0; background: #1a1a1a; overflow: hidden; touch-action: none; }
-        canvas { display: block; margin: 0 auto; }
+        * { box-sizing: border-box; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+            touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain;
+            touch-action: none;
+        }
     </style>
 </head>
-<body>
+
+<body role="application" aria-label="Caminhada da Prevenção - Jogo de Tabuleiro">
     <script type="module" src="CaminhadaPrevencao.js"></script>
+    <script>
+        const aplicarGuardaResize = (n = 0) => {
+            // O Phaser expõe a instância do game via window após inicializar
+            const frames = ['game', '_phaserGame'];
+            let g = null;
+            for (const k of frames) { if (window[k] && window[k].scale) { g = window[k]; break; } }
+            if (!g) {
+                for (const k of Object.keys(window)) {
+                    try { if (window[k] && window[k].scale && window[k].scene) { g = window[k]; break; } } catch(e) {}
+                }
+            }
+            if (g) {
+                const orig = g.scale.resize.bind(g.scale);
+                g.scale.resize = (w, h) => { if (w > 0 && h > 0) orig(w, h); };
+            } else if (n < 30) {
+                setTimeout(() => aplicarGuardaResize(n + 1), 200);
+            }
+        };
+
+        // WCAG 4.1.2: rotula o canvas após o Phaser injetá-lo no DOM
+        const rotularCanvas = (n = 0) => {
+            const c = document.querySelector('canvas');
+            if (c) {
+                c.setAttribute('role', 'img');
+                c.setAttribute('aria-label', 'Caminhada da Prevenção: jogo de tabuleiro sobre prevenção de desastres.');
+                c.setAttribute('tabindex', '0');
+            } else if (n < 20) setTimeout(() => rotularCanvas(n + 1), 100);
+        };
+
+        window.addEventListener('load', () => {
+            aplicarGuardaResize();
+            rotularCanvas();
+        });
+    </script>
 </body>
+
 </html>

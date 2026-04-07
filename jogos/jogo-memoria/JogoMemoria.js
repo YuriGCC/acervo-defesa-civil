@@ -134,6 +134,7 @@ export default class JogoMemoria extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(101).setInteractive({ useHandCursor: true });
 
         btn.on('pointerdown', () => {
+            this.game.destroy(true, false);
             if (window.parent && window.parent.ponte) {
                 window.parent.ponte.emitir('VOLTAR_MENU');
             }

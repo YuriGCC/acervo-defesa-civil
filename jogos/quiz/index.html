@@ -4,81 +4,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
+    <title>Quiz - Defesa Civil e Prevenção de Desastres</title>
     <link rel="stylesheet" href="css/estilo.css">
     <link rel="shortcut icon" href="imagens/LogoGirassolwebp.webp" type="image/x-icon">
 </head>
 
 <body>
-
-    <header id="cabecalho">
-
-        <h1>Quiz Teste</h1>
-
+    <header id="cabecalho" aria-label="Cabeçalho do Quiz">
+        <h1>Quiz - Defesa Civil e Prevenção</h1>
         <div><img src="imagens/doguinha.png" alt="Mascote Amora sentada" id="mascote"></div>
-
     </header>
 
     <main id="princ">
 
-        <div id="pergunta">
+        <div id="pergunta" role="group" aria-labelledby="questao">
 
-            <p id="questao">Qual o primeiro dia da semana?</p>
+            <p id="questao" aria-live="polite" aria-atomic="true">Qual o primeiro dia da semana?</p>
 
-            <div id="alternat">
+            <div id="alternat" role="radiogroup" aria-labelledby="questao">
                 <p class="opcoes">
-                    <button class="botao" onclick="selecionarOpcao(0)" id="b0">
-                        <span class="letra">A</span>
+                    <!-- WCAG 4.1.2: aria-label descreve a alternativa completa -->
+                    <button class="botao" onclick="selecionarOpcao(0)" id="b0" aria-label="Alternativa A">
+                        <span class="letra" aria-hidden="true">A</span>
                         <span class="alter" id="a1">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</span>
                     </button>
                 </p>
 
                 <p class="opcoes">
-                    <button class="botao" onclick="selecionarOpcao(1)" id="b1">
-                        <span class="letra">B</span>
+                    <button class="botao" onclick="selecionarOpcao(1)" id="b1" aria-label="Alternativa B">
+                        <span class="letra" aria-hidden="true">B</span>
                         <span class="alter" id="a2">aaaaaaaa</span>
                     </button>
                 </p>
 
                 <p class="opcoes">
-                    <button class="botao" onclick="selecionarOpcao(2)" id="b2">
-                        <span class="letra">C</span>
+                    <button class="botao" onclick="selecionarOpcao(2)" id="b2" aria-label="Alternativa C">
+                        <span class="letra" aria-hidden="true">C</span>
                         <span class="alter" id="a3">Alt 3</span>
                     </button>
                 </p>
 
                 <p class="opcoes">
-                    <button class="botao" onclick="selecionarOpcao(3)" id="b3">
-                        <span class="letra">D</span>
+                    <button class="botao" onclick="selecionarOpcao(3)" id="b3" aria-label="Alternativa D">
+                        <span class="letra" aria-hidden="true">D</span>
                         <span class="alter" id="a4">Alt 4</span>
                     </button>
                 </p>
 
             </div>
 
-            <div id="paiAmora">
-                <img src="imagens/dogbrincando.png" alt="Amora brincando" id="amora1" class="amoraPonto">
-
+            <!--
+                WCAG 1.1.1: imagens de feedback precisam de alt descritivo.
+                aria-hidden="true" nas que são puramente decorativas quando ocultas.
+            -->
+            <div id="paiAmora" aria-hidden="true">
+                <img src="imagens/dogbrincando.png" alt="Amora brincando comemorando acerto" id="amora1" class="amoraPonto">
                 <img src="imagens/dogpata.png" alt="Amora sentada com a pata levantada" id="amora2" class="amoraPonto">
-
                 <img src="imagens/dogsentada.png" alt="Amora sentada" id="amora3" class="amoraPonto">
             </div>
 
             <div id="paiBotoes">
                 <button type="button" id="verificar" onclick="verificar()" class="b">Verificar</button>
-                
                 <button type="button" id="recomecar" onclick="window.location.reload()" class="b">Recomeçar</button>
-                
                 <button type="button" id="finalizar" class="b" onclick="finalizarJogo()">Finalizar</button>
-                
                 <button type="button" id="btn" onclick="enviar()" class="b">Próxima</button>
             </div>
 
-
+            <!-- WCAG 4.1.3: região de status anuncia resultado da verificação -->
+            <div id="aria-status" role="status" aria-live="polite" aria-atomic="true"
+                style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;">
+            </div>
 
         </div>
-
-
 
     </main>
 
