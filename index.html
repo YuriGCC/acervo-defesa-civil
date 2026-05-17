@@ -3,11 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <!--
-        ACESSIBILIDADE: Removido 'maximum-scale=1.0, user-scalable=no'.
-        WCAG 1.4.4 (Resize Text) exige que o usuário possa ampliar até 200%
-        sem perda de conteúdo. Bloquear o zoom viola este critério.
-    -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="assets/icone-uniasselvi.png" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="57x57" href="assets/favicons/apple-icon-57x57.png">
@@ -27,10 +22,7 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
-    <!--
-        ACESSIBILIDADE: Título descritivo melhora a experiência em leitores de tela
-        e é exigido pelo WCAG 2.4.2 (Page Titled).
-    -->
+
     <title>Acervo de Jogos Educativos</title>
     <style>
         body,
@@ -64,12 +56,6 @@
             border: none;
         }
 
-        /*
-            RESPONSIVIDADE: Removido 'touch-action: none' global.
-            Aplicar isso globalmente bloqueia scroll e gestos nativos do SO,
-            prejudicando usuários de dispositivos móveis e tecnologias assistivas.
-            O Phaser gerencia o touch-action no canvas diretamente.
-        */
         * {
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -77,22 +63,11 @@
             box-sizing: border-box;
         }
 
-        /*
-            ACESSIBILIDADE (WCAG 2.4.7 - Focus Visible):
-            Indicador de foco visível para navegação por teclado.
-            O outline padrão do browser é frequentemente removido por CSS resets,
-            tornando impossível saber qual elemento está focado.
-        */
         *:focus-visible {
             outline: 3px solid #FFD700;
             outline-offset: 3px;
         }
 
-        /*
-            ACESSIBILIDADE: Região de anúncio para leitores de tela (ARIA live region).
-            Visualmente oculta mas acessível a tecnologias assistivas.
-            Anuncia mudanças de estado do jogo (ex: "Jogo Quiz iniciado").
-        */
         #aria-announcer {
             position: absolute;
             width: 1px;
@@ -105,10 +80,6 @@
             border: 0;
         }
 
-        /*
-            ACESSIBILIDADE: Botão de retorno ao menu acessível via teclado e
-            visível sobre o iframe do jogo.
-        */
         #btn-voltar-menu {
             display: none;
             position: absolute;
@@ -134,43 +105,23 @@
 </head>
 
 <body>
-    <!--
-        ACESSIBILIDADE (WCAG 4.1.2 - Name, Role, Value):
-        role="application" informa leitores de tela que esta região é uma
-        aplicação interativa, não um documento estático.
-        aria-label fornece nome acessível para a aplicação.
-    -->
+
     <div
         id="container-menu"
         role="application"
         aria-label="Acervo de Jogos Educativos - Menu de seleção de jogos"
     ></div>
 
-    <!--
-        ACESSIBILIDADE: aria-live removido daqui — conflitava com o #aria-announcer,
-        causando anúncios duplicados em leitores de tela.
-        role="region" + aria-label mantém a semântica sem o live region duplicado.
-    -->
     <div
         id="container-jogo"
         role="region"
         aria-label="Área do jogo em execução"
     ></div>
 
-    <!--
-        ACESSIBILIDADE: Botão HTML nativo para voltar ao menu.
-        Elementos <button> nativos são automaticamente acessíveis por teclado
-        e leitores de tela, sem necessidade de ARIA adicional.
-    -->
     <button id="btn-voltar-menu" aria-label="Voltar ao menu de jogos">
         ← Voltar ao Menu
     </button>
 
-    <!--
-        ACESSIBILIDADE (ARIA Live Region):
-        Elemento invisível que anuncia mudanças de estado para leitores de tela.
-        Usado para informar qual jogo foi iniciado ou quando o menu voltou.
-    -->
     <div id="aria-announcer" aria-live="assertive" aria-atomic="true"></div>
 
     <script src="config-jogos.js"></script>
@@ -180,14 +131,7 @@
     <script src="main.js"></script>
 
     <script>
-        /*
-            ACESSIBILIDADE (WCAG 4.1.2 - Name, Role, Value):
-            O Phaser injeta um <canvas> no DOM sem atributos de acessibilidade.
-            Leitores de tela ignoram ou anunciam "canvas" sem contexto.
-            Aguardamos o Phaser criar o canvas e então adicionamos os atributos.
-            role="img" + aria-label descrevem o propósito do canvas.
-            aria-hidden="false" garante que não seja ignorado por engano.
-        */
+
         window.addEventListener('load', () => {
             // Phaser pode levar alguns frames para injetar o canvas
             const tentarRotularCanvas = (tentativas = 0) => {

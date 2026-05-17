@@ -27,7 +27,9 @@ class Evento {
      */
     emitir(nomeEvento, dados) {
         const chamadasEvento = this.eventos[nomeEvento];
+        console.log(`[emitir] Evento "${nomeEvento}" emitido com dados:`, dados);
         if (chamadasEvento) {
+            console.log(`[emitir] Encontradas ${chamadasEvento.length} chamadas para o evento "${nomeEvento}". Executando...`);
             [...chamadasEvento].forEach(chamada => chamada(dados));
         }
     }
@@ -73,5 +75,6 @@ class Evento {
 if (!window.ponte) {
     const ponte = new Evento();
     window.ponte = ponte;
+    console.log('Ponte de eventos criada e disponível em window.ponte');
     Object.freeze(window.ponte);
 }

@@ -15,6 +15,7 @@ class Menu extends Phaser.Scene {
         this.indiceFoco = 0;
         this._cardRefs = [];
         this._keyListener = null;
+        this.bloqueioInteracao = false;
     }
 
     preload() {
@@ -40,6 +41,10 @@ class Menu extends Phaser.Scene {
         this.cameras.main.fadeIn(1000, 0, 0, 0);
 
         this.criarBotaoProsseguir(splash);
+
+        this.events.on('resume', () => {
+            this.bloqueioInteracao = false;
+        });
     }
 
     /**
@@ -115,11 +120,6 @@ class Menu extends Phaser.Scene {
         bg.on('pointerover', () => bg.setFillStyle(0x333333, 0.9));
         bg.on('pointerout', () => bg.setFillStyle(0x000000, 0.7));
 
-        /*
-            ACESSIBILIDADE (WCAG 2.1.1 - Keyboard):
-            Permite acionar o botão "Prosseguir" com Enter ou Espaço.
-            Sem isso, usuários que não usam mouse ficam presos na tela de intro.
-        */
         const teclaIntro = this.input.keyboard.addKey(
             Phaser.Input.Keyboard.KeyCodes.ENTER
         );
@@ -198,11 +198,6 @@ class Menu extends Phaser.Scene {
 
         const container = this.add.container(x, y);
 
-        /*
-            ACESSIBILIDADE (WCAG 1.4.3 - Contrast):
-            Stroke branco sobre cor de fundo garante separação visual.
-            A borda de foco (0xFFD700 amarelo) tem contraste alto sobre qualquer cor.
-        */
         const fundo = this.add.rectangle(0, 0, larguraBotao, alturaBotao, jogo.cor)
             .setInteractive({ useHandCursor: true })
             .setStrokeStyle(4, 0xffffff, 0.8);
@@ -229,12 +224,15 @@ class Menu extends Phaser.Scene {
             container.add(icone);
         }
 
-        // Ações de ponteiro (mouse e touch via pointerdown — WCAG 2.5.1)
+        // Ações de ponteiro (mouse e touch via pointerdown)
         let acionado = false;
 
         const selecionarJogo = () => {
-            if (acionado) return;
-            acionado = true;
+            // Ignora se estiver travado ou se já tiver sido acionado (evita múltiplos cliques rápidos)
+            if (this.bloqueioInteracao) return; 
+            // Trava a tela inteira para evitar múltiplas seleções rápidas, que podem causar bugs ou sobrecarga
+            this.bloqueioInteracao = true;      
+            
             container.setScale(0.93);
             this.time.delayedCall(100, () => this.iniciarTrocaDeJogo(jogo));
         };
@@ -243,7 +241,6 @@ class Menu extends Phaser.Scene {
         fundo.on('pointerup', () => container.setScale(1));
 
         /*
-            ACESSIBILIDADE (WCAG 2.4.7 - Focus Visible):
             Destaca visualmente o card quando recebe foco via teclado.
         */
         fundo.on('pointerover', () => {
@@ -251,7 +248,6 @@ class Menu extends Phaser.Scene {
         });
         fundo.on('pointerout', () => {
             /*
-                ACESSIBILIDADE (WCAG 2.4.7 - Focus Visible):
                 Só remove o hover se este card NÃO for o que está com foco de teclado.
                 Sem esta guarda, mover o mouse para fora apagava o indicador de foco,
                 deixando o usuário de teclado sem referência visual de onde está.
@@ -269,7 +265,6 @@ class Menu extends Phaser.Scene {
 
     /**
      * Aplica o indicador de foco visual ao card pelo índice.
-     * WCAG 2.4.7 - Focus Visible.
      */
     _aplicarFoco(novoIndice) {
         // Remove foco do card anterior
@@ -292,7 +287,6 @@ class Menu extends Phaser.Scene {
 
     /**
      * Registra navegação por teclado nos cards do menu.
-     * WCAG 2.1.1 - Keyboard: toda funcionalidade deve ser operável por teclado.
      */
     _registrarNavegacaoTeclado() {
         // Remove listener anterior para evitar duplicação entre páginas
@@ -365,8 +359,8 @@ class Menu extends Phaser.Scene {
                 // Enter / Espaço: seleciona o card focado
                 case Phaser.Input.Keyboard.KeyCodes.ENTER:
                 case Phaser.Input.Keyboard.KeyCodes.SPACE:
-                    if (this._cardRefs[this.indiceFoco]) {
-                        
+                    if (this._cardRefs[this.indiceFoco] && !this.bloqueioInteracao) {
+                        this.bloqueioInteracao = true; // Trava a tela
                         const { container, jogo } = this._cardRefs[this.indiceFoco];
                         container.setScale(0.93);
                         this.time.delayedCall(100, () => this.iniciarTrocaDeJogo(jogo));
@@ -461,8 +455,14 @@ class Menu extends Phaser.Scene {
         }
 
         this._anunciar(`Iniciando jogo: ${jogo.nome}`);
-        window.ponte.emitir('TROCAR_JOGO', { caminho: jogo.caminho, nome: jogo.nome });
-        this.scene.pause();
+        
+        // Inicia o escurecimento (Fade Out) primeiro
         this.cameras.main.fadeOut(500, 0, 0, 0);
+
+        // Aguarda o Fade Out terminar para então pausar e trocar o jogo
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.pause();
+            window.ponte.emitir('TROCAR_JOGO', { caminho: jogo.caminho, nome: jogo.nome });
+        });
     }
 }

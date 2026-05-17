@@ -217,11 +217,11 @@ function verificar(){
 
 function finalizarJogo() {
     if (window.parent && window.parent.ponte) {
+        console.log('[finalizarJogo] Emissão do evento VOLTAR_MENU para a ponte de eventos');
         window.parent.ponte.emitir('VOLTAR_MENU');
     }
 }
 
-// WCAG 4.1.3: anuncia mensagens de status para leitores de tela
 function anunciarStatus(msg) {
     const el = document.getElementById('aria-status');
     if (!el) return;

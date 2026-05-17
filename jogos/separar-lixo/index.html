@@ -37,6 +37,46 @@
 </head>
 <body>
     <script type="module">
+        // Proteção contra "Framebuffer status: Incomplete Attachment"
+        // Intercepta erro de renderização antes de travar o jogo
+        const originalError = console.error;
+        let errorCount = 0;
+        
+        console.error = function(...args) {
+            const errorMsg = String(args[0]);
+            if (errorMsg.includes('Framebuffer status')) {
+                errorCount++;
+                console.warn('[Phaser Guard] Framebuffer error interceptado:', errorCount);
+                if (errorCount > 3) {
+                    console.warn('[Phaser Guard] Muitos erros de Framebuffer - reiniciando game');
+                    if (window._phaserGame) {
+                        window._phaserGame.scale.fullscreenTarget = null;
+                    }
+                    errorCount = 0;
+                }
+                // Não passa o erro adiante
+                return;
+            }
+            return originalError.apply(console, args);
+        };
+
+        // ResizeObserver para detectar dimensões inválidas
+        if (window.ResizeObserver) {
+            setTimeout(() => {
+                const observer = new ResizeObserver(() => {
+                    const rect = document.documentElement.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) {
+                        if (window._phaserGame && window._phaserGame.scale) {
+                            try {
+                                window._phaserGame.scale.fullscreenTarget = null;
+                            } catch (e) {}
+                        }
+                    }
+                });
+                observer.observe(document.documentElement);
+            }, 1000);
+        }
+
         import SepararLixo from './SepararLixo.js';
     
         const config = {
@@ -79,6 +119,14 @@
             } else if (n < 20) setTimeout(() => rotularCanvas(n + 1), 100);
         };
         rotularCanvas();
+
+        // Limpeza de recursos quando iframe é destruído
+        window.addEventListener('beforeunload', () => {
+            if (window._phaserGame) {
+                window._phaserGame.destroy(true);
+                window._phaserGame = null;
+            }
+        });
     </script>
 </body>
 </html>

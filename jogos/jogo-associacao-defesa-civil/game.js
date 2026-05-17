@@ -91,7 +91,7 @@ function createCard(data, type, pairId) {
     const card = document.createElement('div');
     card.className = `card ${type}`;
     card.dataset.pairId = pairId;
-    // WCAG 4.1.2: role="button" + aria-label tornam o card acessível por teclado e leitores de tela
+    // role="button" + aria-label tornam o card acessível por teclado e leitores de tela
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', type === 'risk' ? '0' : '-1');
     card.setAttribute('aria-label', `${type === 'risk' ? 'Situação' : 'Prevenção'}: ${data.text}`);
@@ -259,3 +259,32 @@ function showFeedback(msg, type) {
 function updateScore() { scoreElement.textContent = score; }
 function showCompletion() { gameScreen.classList.add('hidden'); completionScreen.classList.remove('hidden'); document.getElementById('finalScore').textContent = score; }
 function shuffleArray(arr) { return arr.sort(() => Math.random() - 0.5); }
+/**
+ * Limpa recursos quando o jogo é encerrado.
+ * Isso evita vazamento de memória e conflitos de WebGL.
+ */
+function cleanupGame() {
+    // Pausa áudio
+    soundCorrect.pause();
+    soundError.pause();
+
+    // Limpa canvas
+    if (canvas && ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Reseta estado do jogo
+    draggedCard = null;
+    currentTouchPos = null;
+    connections = [];
+    matchedPairs = 0;
+
+    // Remove interação de cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.draggable = false;
+    });
+}
+
+// Limpa quando a página/iframe é descarregada
+window.addEventListener('beforeunload', cleanupGame);
+window.addEventListener('unload', cleanupGame);

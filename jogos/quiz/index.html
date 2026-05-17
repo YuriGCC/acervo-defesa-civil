@@ -23,7 +23,6 @@
 
             <div id="alternat" role="radiogroup" aria-labelledby="questao">
                 <p class="opcoes">
-                    <!-- WCAG 4.1.2: aria-label descreve a alternativa completa -->
                     <button class="botao" onclick="selecionarOpcao(0)" id="b0" aria-label="Alternativa A">
                         <span class="letra" aria-hidden="true">A</span>
                         <span class="alter" id="a1">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</span>
@@ -53,10 +52,6 @@
 
             </div>
 
-            <!--
-                WCAG 1.1.1: imagens de feedback precisam de alt descritivo.
-                aria-hidden="true" nas que são puramente decorativas quando ocultas.
-            -->
             <div id="paiAmora" aria-hidden="true">
                 <img src="imagens/dogbrincando.png" alt="Amora brincando comemorando acerto" id="amora1" class="amoraPonto">
                 <img src="imagens/dogpata.png" alt="Amora sentada com a pata levantada" id="amora2" class="amoraPonto">
@@ -70,7 +65,6 @@
                 <button type="button" id="btn" onclick="enviar()" class="b">Próxima</button>
             </div>
 
-            <!-- WCAG 4.1.3: região de status anuncia resultado da verificação -->
             <div id="aria-status" role="status" aria-live="polite" aria-atomic="true"
                 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;">
             </div>

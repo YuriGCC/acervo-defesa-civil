@@ -36,6 +36,21 @@
 <body role="application" aria-label="Caminhada da Prevenção - Jogo de Tabuleiro">
     <script type="module" src="CaminhadaPrevencao.js"></script>
     <script>
+        // Proteção contra Framebuffer error: evita resize com dimensões inválidas
+        if (window.ResizeObserver) {
+            setTimeout(() => {
+                const observer = new ResizeObserver(() => {
+                    const rect = document.documentElement.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) {
+                        if (window._phaserGame && window._phaserGame.scale) {
+                            window._phaserGame.scale.stopFullscreen();
+                        }
+                    }
+                });
+                observer.observe(document.documentElement);
+            }, 500);
+        }
+
         const aplicarGuardaResize = (n = 0) => {
             // O Phaser expõe a instância do game via window após inicializar
             const frames = ['game', '_phaserGame'];
@@ -54,7 +69,6 @@
             }
         };
 
-        // WCAG 4.1.2: rotula o canvas após o Phaser injetá-lo no DOM
         const rotularCanvas = (n = 0) => {
             const c = document.querySelector('canvas');
             if (c) {
@@ -67,6 +81,14 @@
         window.addEventListener('load', () => {
             aplicarGuardaResize();
             rotularCanvas();
+
+            // Limpeza de recursos quando iframe é destruído
+            window.addEventListener('beforeunload', () => {
+                if (window._phaserGame) {
+                    window._phaserGame.destroy(true);
+                    window._phaserGame = null;
+                }
+            });
         });
     </script>
 </body>

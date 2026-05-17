@@ -204,3 +204,11 @@ window._phaserGame.events.once('ready', () => {
     const orig = window._phaserGame.scale.resize.bind(window._phaserGame.scale);
     window._phaserGame.scale.resize = (w, h) => { if (w > 0 && h > 0) orig(w, h); };
 });
+
+// Limpeza de recursos quando iframe é destruído
+window.addEventListener('beforeunload', () => {
+    if (window._phaserGame) {
+        window._phaserGame.destroy(true);
+        window._phaserGame = null;
+    }
+});
