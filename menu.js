@@ -62,31 +62,44 @@ class Menu extends Phaser.Scene {
     criarBotaoProsseguir(splash) {
         const { width, height } = this.scale;
         const btnX = width / 2;
-        const btnY = height * 0.88;
+        const btnY = height * 0.86; // Ajustado levemente para cima para acomodar o botão maior
 
         const btnContainer = this.add.container(btnX, btnY).setDepth(101);
 
-        const btnW = width * 0.22;
-        const btnH = height * 0.09;
+        // Aumentamos um pouco a largura e altura para caber confortavelmente as duas linhas
+        const btnW = width * 0.26;
+        const btnH = height * 0.12;
 
         const bg = this.add.rectangle(0, 0, btnW, btnH, 0x000000, 0.7)
             .setInteractive({ useHandCursor: true })
-            .setStrokeStyle(4, 0xffffff, 1);
+            .setStrokeStyle(6, 0xFFD700, 1); // Borda amarela indicando foco ativo
 
-        const fontSize = Math.round(height * 0.042);
+        const fontSizeMain = Math.round(height * 0.038);
+        const fontSizeSub = Math.round(height * 0.022);
 
-        const txt = this.add.text(0, 0, 'PROSSEGUIR', {
-            fontSize: `${fontSize}px`,
+        // Texto Principal (Deslocado um pouco para cima)
+        const txt = this.add.text(0, -height * 0.018, 'PROSSEGUIR', {
+            fontSize: `${fontSizeMain}px`,
             fontFamily: 'Arial',
             fontWeight: 'bold',
             fill: '#ffffff'
         }).setOrigin(0.5);
 
-        btnContainer.add([bg, txt]);
+        // SUBTEXTO ACESSÍVEL: Sugestão visual direta para o uso do teclado
+        const subTxt = this.add.text(0, height * 0.022, '[ PRESSIONE ENTER ]', {
+            fontSize: `${fontSizeSub}px`,
+            fontFamily: 'Arial',
+            fontWeight: 'bold',
+            fill: '#FFD700' // Amarelo de alto contraste combinando com a borda
+        }).setOrigin(0.5);
 
+        // Adiciona todos os elementos ao grupo/container
+        btnContainer.add([bg, txt, subTxt]);
+
+        // Animação de pulsação global do botão
         this.tweens.add({
             targets: btnContainer,
-            scale: 1.05,
+            scale: 1.04,
             duration: 800,
             yoyo: true,
             repeat: -1,
@@ -110,27 +123,28 @@ class Menu extends Phaser.Scene {
                 duration: 800,
                 onComplete: () => {
                     splash.destroy();
-                    btnContainer.destroy();
+                    btnContainer.destroy(); 
                     this.renderizarInterfaceMenu();
                 }
             });
         };
 
         bg.on('pointerdown', prosseguir);
-        bg.on('pointerover', () => bg.setFillStyle(0x333333, 0.9));
-        bg.on('pointerout', () => bg.setFillStyle(0x000000, 0.7));
+        bg.on('pointerover', () => {
+            bg.setFillStyle(0x333333, 0.9);
+        });
+        bg.on('pointerout', () => {
+            bg.setFillStyle(0x000000, 0.7);
+            bg.setStrokeStyle(6, 0xFFD700, 1);
+        });
 
-        const teclaIntro = this.input.keyboard.addKey(
-            Phaser.Input.Keyboard.KeyCodes.ENTER
-        );
-        const teclaEspaco = this.input.keyboard.addKey(
-            Phaser.Input.Keyboard.KeyCodes.SPACE
-        );
+        const teclaIntro = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        const teclaEspaco = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         teclaIntro.once('down', prosseguir);
         teclaEspaco.once('down', prosseguir);
 
-        this._anunciar('Tela de apresentação. Pressione Enter ou Espaço para prosseguir ao menu de jogos.');
+        this._anunciar('Tela de apresentação. Botão Prosseguir selecionado. Pressione Enter ou Espaço para ir ao menu de jogos.');
     }
 
     renderizarInterfaceMenu() {
@@ -246,20 +260,34 @@ class Menu extends Phaser.Scene {
         fundo.on('pointerover', () => {
             fundo.setStrokeStyle(6, 0xFFD700, 1);
         });
+
+        // Guarda a posição exata deste card no array
+        const indexRef = this._cardRefs.length;
+        
         fundo.on('pointerout', () => {
-            /*
-                Só remove o hover se este card NÃO for o que está com foco de teclado.
-                Sem esta guarda, mover o mouse para fora apagava o indicador de foco,
-                deixando o usuário de teclado sem referência visual de onde está.
-            */
-            const esteCardFocado = this._cardRefs[this.indiceFoco]?.fundo === fundo;
-            if (!esteCardFocado) {
+            // Só tira o brilho se o teclado NÃO estiver focando este card
+            if (this.indiceFoco !== indexRef) {
                 fundo.setStrokeStyle(4, 0xffffff, 0.8);
             }
         });
 
-        // Salva referência para navegação por teclado
-        this._cardRefs.push({ container, fundo, jogo });
+        // Insere o card com métodos padronizados de foco e ação no array de referências, para navegação por teclado    
+        this._cardRefs.push({
+            tipo: 'jogo',
+            container: container,
+            fundo: fundo,
+            acao: () => selecionarJogo(),
+            focar: () => {
+                fundo.setStrokeStyle(8, 0xFFD700, 1);
+                container.setScale(1.04);
+                this._anunciar(`${jogo.nome}. Pressione Enter para jogar.`);
+            },
+            desfocar: () => {
+                fundo.setStrokeStyle(4, 0xffffff, 0.8);
+                container.setScale(1);
+            }
+        });
+        
         this.botoesGrupo.add(container);
     }
 
@@ -267,22 +295,17 @@ class Menu extends Phaser.Scene {
      * Aplica o indicador de foco visual ao card pelo índice.
      */
     _aplicarFoco(novoIndice) {
-        // Remove foco do card anterior
+        if (!this._cardRefs[novoIndice]) return;
+
+        // Avisa o elemento antigo para perder o foco
         if (this._cardRefs[this.indiceFoco]) {
-            this._cardRefs[this.indiceFoco].fundo.setStrokeStyle(4, 0xffffff, 0.8);
-            this._cardRefs[this.indiceFoco].container.setScale(1);
+            this._cardRefs[this.indiceFoco].desfocar();
         }
 
         this.indiceFoco = novoIndice;
 
-        // Aplica foco no novo card
-        if (this._cardRefs[this.indiceFoco]) {
-            const { fundo, container, jogo } = this._cardRefs[this.indiceFoco];
-            // Borda amarela de alto contraste como indicador de foco
-            fundo.setStrokeStyle(8, 0xFFD700, 1);
-            container.setScale(1.04);
-            this._anunciar(`${jogo.nome}. Pressione Enter para jogar.`);
-        }
+        // Avisa o elemento novo para ganhar o foco
+        this._cardRefs[this.indiceFoco].focar();
     }
 
     /**
@@ -294,9 +317,17 @@ class Menu extends Phaser.Scene {
             this.input.keyboard.off('keydown', this._keyListener);
         }
 
-        const totalCards = this._cardRefs.length;
         const colunas = 3;
         const totalPaginas = Math.ceil(LISTA_JOGOS.length / this.jogosPorPagina);
+        
+        // Conta quantos itens são jogos
+        const qtdJogos = this._cardRefs.filter(c => c.tipo === 'jogo').length;
+        
+        // IDENTIFICAÇÃO ESPACIAL DOS BOTÕES:
+        // Procura no array quem é a seta da Esquerda (Anterior) e quem é a da Direita (Próximo)
+        // usando a posição (x) deles na tela para não ter erro de ordem.
+        const idxAnterior = this._cardRefs.findIndex(c => c.tipo === 'seta' && c.container.x < this.scale.width / 2);
+        const idxProximo = this._cardRefs.findIndex(c => c.tipo === 'seta' && c.container.x > this.scale.width / 2);
 
         this._keyListener = (event) => {
 
@@ -311,63 +342,85 @@ class Menu extends Phaser.Scene {
                 Phaser.Input.Keyboard.KeyCodes.PAGE_UP,
                 65, 68, 83, 87 // A, D, S, W
             ];
+            
             if (teclasConsumidas.includes(event.keyCode)) {
                 event.preventDefault();
             }
 
             switch (event.keyCode) {
-                // Seta direita / D: próximo card
+                // Seta direita / D
                 case Phaser.Input.Keyboard.KeyCodes.RIGHT:
                 case 68: // D
-                    if (this.indiceFoco < totalCards - 1) {
+                    if (this.indiceFoco === idxAnterior) {
+                        // Se estiver no botão Anterior, volta para o primeiro jogo da tela
+                        if (qtdJogos > 0) this._aplicarFoco(0);
+                    } else if (this.indiceFoco < qtdJogos - 1) {
+                        // Se estiver em um jogo normal, avança um
                         this._aplicarFoco(this.indiceFoco + 1);
+                    } else if (this.indiceFoco === qtdJogos - 1 && idxProximo !== -1) {
+                        // Se chegou no último jogo, pula para o botão Próximo
+                        this._aplicarFoco(idxProximo);
                     }
                     break;
 
-                // Seta esquerda / A: card anterior
+                // Seta esquerda / A
                 case Phaser.Input.Keyboard.KeyCodes.LEFT:
                 case 65: // A
-                    if (this.indiceFoco > 0) {
+                    if (this.indiceFoco === idxProximo) {
+                        // Se estiver no botão Próximo, volta para o último jogo da tela
+                        if (qtdJogos > 0) this._aplicarFoco(qtdJogos - 1);
+                    } else if (this.indiceFoco > 0 && this.indiceFoco < qtdJogos) {
+                        // Se estiver em um jogo normal, volta um
                         this._aplicarFoco(this.indiceFoco - 1);
+                    } else if (this.indiceFoco === 0 && idxAnterior !== -1) {
+                        // Se chegou no primeiro jogo, pula para o botão Anterior
+                        this._aplicarFoco(idxAnterior);
                     }
                     break;
 
-                // Seta baixo / S: linha abaixo
+                // Seta baixo / S
                 case Phaser.Input.Keyboard.KeyCodes.DOWN:
                 case 83: // S
-                    if (this.indiceFoco + colunas < totalCards) {
-                        this._aplicarFoco(this.indiceFoco + colunas);
-                    } else if (this.paginaAtual < totalPaginas - 1) {
-                        // Avança página ao chegar no último card
-                        this.paginaAtual++;
-                        this.renderizarInterfaceMenu();
+                    if (this.indiceFoco < qtdJogos) {
+                        if (this.indiceFoco + colunas < qtdJogos) {
+                            this._aplicarFoco(this.indiceFoco + colunas);
+                        } else if (this.paginaAtual < totalPaginas - 1) {
+                            this.paginaAtual++;
+                            this.renderizarInterfaceMenu();
+                        }
                     }
                     break;
 
-                // Seta cima / W: linha acima
+                // Seta cima / W
                 case Phaser.Input.Keyboard.KeyCodes.UP:
                 case 87: // W
-                    if (this.indiceFoco - colunas >= 0) {
-                        this._aplicarFoco(this.indiceFoco - colunas);
-                    } else if (this.paginaAtual > 0) {
-                        // Volta página ao chegar no primeiro card
-                        this.paginaAtual--;
-                        this.renderizarInterfaceMenu();
+                    if (this.indiceFoco < qtdJogos) {
+                        if (this.indiceFoco - colunas >= 0) {
+                            this._aplicarFoco(this.indiceFoco - colunas);
+                        } else if (this.paginaAtual > 0) {
+                            this.paginaAtual--;
+                            this.renderizarInterfaceMenu();
+                        }
                     }
                     break;
 
-                // Enter / Espaço: seleciona o card focado
+                // Enter / Espaço: executa a ação do item que estiver focado
                 case Phaser.Input.Keyboard.KeyCodes.ENTER:
                 case Phaser.Input.Keyboard.KeyCodes.SPACE:
                     if (this._cardRefs[this.indiceFoco] && !this.bloqueioInteracao) {
-                        this.bloqueioInteracao = true; // Trava a tela
-                        const { container, jogo } = this._cardRefs[this.indiceFoco];
-                        container.setScale(0.93);
-                        this.time.delayedCall(100, () => this.iniciarTrocaDeJogo(jogo));
+                        const itemSelecionado = this._cardRefs[this.indiceFoco];
+                        
+                        // Efeito visual de clique (reduz o tamanho do card)
+                        itemSelecionado.container.setScale(0.93);
+                          
+                        // Apenas chama a ação do item. 
+                        // Se for um jogo, o 'selecionarJogo()' vai cuidar de travar no momento certo.
+                        // Se for uma seta, ela vai mudar de página sem travar o menu.
+                        this.time.delayedCall(100, () => itemSelecionado.acao());
                     }
                     break;
 
-                // Page Down / L: próxima página
+                // Page Down: próxima página
                 case Phaser.Input.Keyboard.KeyCodes.PAGE_DOWN:
                     if (this.paginaAtual < totalPaginas - 1) {
                         this.paginaAtual++;
@@ -375,7 +428,7 @@ class Menu extends Phaser.Scene {
                     }
                     break;
 
-                // Page Up / J: página anterior
+                // Page Up: página anterior
                 case Phaser.Input.Keyboard.KeyCodes.PAGE_UP:
                     if (this.paginaAtual > 0) {
                         this.paginaAtual--;
@@ -387,8 +440,10 @@ class Menu extends Phaser.Scene {
 
         this.input.keyboard.on('keydown', this._keyListener);
 
-        // Aplica foco inicial no primeiro card
+        // Aplica o foco inicial
         if (this._cardRefs.length > 0) {
+            // Focamos sempre no índice 0, que, por conta da montagem, 
+            // será OBRIGATORIAMENTE o primeiro jogo da página atual!
             this._aplicarFoco(0);
         }
     }
@@ -409,7 +464,7 @@ class Menu extends Phaser.Scene {
     criarSetaNavegacao(x, y, label, direcao) {
         const { height } = this.scale;
         /*
-            RESPONSIVIDADE: raio do círculo proporcional à altura do canvas.
+            Raio do círculo proporcional à altura do canvas.
             Antes era fixo em 60px — em telas pequenas ficava enorme.
         */
         const raio = height * 0.065;
@@ -437,11 +492,40 @@ class Menu extends Phaser.Scene {
         setaContainer.add([circulo, textoSeta, iconeSeta]);
 
         circulo.on('pointerover', () => circulo.setStrokeStyle(6, 0xFFD700, 1));
-        circulo.on('pointerout', () => circulo.setStrokeStyle(4, 0xffffff, 1));
+
+        // Guarda a posição exata deste card no array para controle de foco via teclado
+        const indexRef = this._cardRefs.length;
+        
+        // Só remove o hover se o teclado NÃO estiver focando este card, para não apagar o indicador de foco
+        circulo.on('pointerout', () => {
+            if (this.indiceFoco !== indexRef) {
+                circulo.setStrokeStyle(4, 0xffffff, 1);
+            }
+        });
 
         circulo.on('pointerdown', () => {
             this.paginaAtual += direcao;
             this.renderizarInterfaceMenu();
+        });
+
+        // Adiciona a seta no array de navegação do teclado
+        this._cardRefs.push({
+            tipo: 'seta',
+            container: setaContainer,
+            fundo: circulo,
+            acao: () => {
+                this.paginaAtual += direcao;
+                this.renderizarInterfaceMenu();
+            },
+            focar: () => {
+                circulo.setStrokeStyle(6, 0xFFD700, 1);
+                setaContainer.setScale(1.05);
+                this._anunciar(`Página ${direcao > 0 ? 'Seguinte' : 'Anterior'}. Pressione Enter.`);
+            },
+            desfocar: () => {
+                circulo.setStrokeStyle(4, 0xffffff, 1);
+                setaContainer.setScale(1);
+            }
         });
 
         this.botoesGrupo.add(setaContainer);

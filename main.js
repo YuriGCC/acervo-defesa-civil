@@ -136,6 +136,13 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
 
     btnVoltar.onclick = voltarAoMenu;
 
+    btnVoltar.onkeydown = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            voltarAoMenu();
+        }
+    };
+
     // Mostra container do jogo
     containerMenu.style.visibility = 'hidden'; 
     containerJogo.style.display = 'block';

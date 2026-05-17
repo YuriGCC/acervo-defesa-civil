@@ -2,35 +2,50 @@ export default class SepararLixo extends Phaser.Scene {
     constructor() {
         super('SepararLixo');
         
-        // Configuração lógica: associamos um "apelido" (chave) ao tipo de lixo
+        // Adicionamos os nomes em português para o leitor de tela pronunciar
         this.configLixo = {
-            'papel': { binImg: 'lixeira_azul', itemImg: 'item_papel' },
-            'plastico': { binImg: 'lixeira_vermelha', itemImg: 'item_plastico' },
-            'vidro': { binImg: 'lixeira_verde', itemImg: 'item_vidro' },
-            'organico': { binImg: 'lixeira_amarela', itemImg: 'item_organico' }
+            'papel': { binImg: 'lixeira_azul', itemImg: 'item_papel', nome: 'Papel', corLixeira: 'Azul' },
+            'plastico': { binImg: 'lixeira_vermelha', itemImg: 'item_plastico', nome: 'Plástico', corLixeira: 'Vermelha' },
+            'vidro': { binImg: 'lixeira_verde', itemImg: 'item_vidro', nome: 'Vidro', corLixeira: 'Verde' },
+            'organico': { binImg: 'lixeira_amarela', itemImg: 'item_organico', nome: 'Orgânico', corLixeira: 'Amarela' }
         };
         
         this.score = 0;
         this.scoreToWin = 10;
         this.maxItensNaTela = 4; 
-        this.itensAtuais = 0;
+        
+        // Variáveis de Estado de Acessibilidade
+        this.lixosEmCena = [];
+        this.lixeirasEmCena = [];
+        this.estadoTeclado = 'LIVRE'; // 'LIVRE', 'SEGURANDO', 'FIM'
+        this.indiceFoco = -1;
+        this.lixoSegurado = null;
+        this.btnVoltar = null;
     }
 
     preload() {
-        // Carregamento das Lixeiras
         this.load.image('lixeira_azul', 'assets/lixeira_azul.png');
         this.load.image('lixeira_vermelha', 'assets/lixeira_vermelha.png');
         this.load.image('lixeira_verde', 'assets/lixeira_verde.png');
         this.load.image('lixeira_amarela', 'assets/lixeira_amarela.png');
-
-        // Carregamento dos Itens de Lixo
         this.load.image('item_papel', 'assets/papel.png');
         this.load.image('item_plastico', 'assets/plastico.png');
         this.load.image('item_vidro', 'assets/vidro.png');
         this.load.image('item_organico', 'assets/organico.png');
     }
 
+    // Atalho para conversar com a div do locutor no HTML
+    falar(mensagem) {
+        if (window.anunciar) window.anunciar(mensagem);
+    }
+
     create() {
+        // Reset de variáveis
+        this.lixosEmCena = [];
+        this.lixeirasEmCena = [];
+        this.score = 0;
+        this.estadoTeclado = 'LIVRE';
+
         const { width, height } = this.scale;
         
         this.add.text(width / 2, 80, 'COLETA SELETIVA', { 
@@ -45,14 +60,9 @@ export default class SepararLixo extends Phaser.Scene {
             fontSize: '34px', fill: '#00ff00', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5);
 
-        this.tweens.add({
-            targets: textoChamada,
-            scale: 1.05,
-            duration: 1000,
-            yoyo: true,
-            loop: -1
-        });
+        this.tweens.add({ targets: textoChamada, scale: 1.05, duration: 1000, yoyo: true, loop: -1 });
 
+        // CRIAÇÃO DAS LIXEIRAS
         const yPosLixeira = height * 0.78; 
         const chaves = Object.keys(this.configLixo);
         
@@ -60,21 +70,34 @@ export default class SepararLixo extends Phaser.Scene {
             const config = this.configLixo[tipo];
             const xPos = (width / 5) * (index + 1);
             
-            // Imagem visual da lixeira
             const lixeiraImg = this.add.image(xPos, yPosLixeira, config.binImg).setScale(0.85);
             
-            // Hitbox invisível ampliada (Drop Zone) para facilitar o toque
             const zonaDrop = this.add.zone(xPos, yPosLixeira, 300, 400)
                 .setRectangleDropZone(300, 400)
                 .setData('tipo_lixo_correto', tipo)
-                .setData('objeto_visual', lixeiraImg);
+                .setData('objeto_visual', lixeiraImg)
+                .setData('nome_acessivel', `Lixeira ${config.corLixeira} para ${config.nome}`);
 
             this.add.text(xPos, yPosLixeira + 180, tipo.toUpperCase(), { 
                 fontSize: '40px', fill: '#ffffff', fontWeight: '900', stroke: '#000', strokeThickness: 5
             }).setOrigin(0.5);
+
+            // Guarda para navegação por teclado
+            this.lixeirasEmCena.push(zonaDrop);
         });
 
-        // EVENTOS DE INTERAÇÃO (DRAG AND DROP) ---
+        // CURSOR DE FOCO VISUAL (Acessibilidade Visual)
+        this.cursorFoco = this.add.rectangle(0, 0, 200, 200, 0x000000, 0)
+            .setStrokeStyle(10, 0xFFD700) // Amarelo de alto contraste
+            .setDepth(999)
+            .setVisible(false);
+
+        // Faz o cursor pulsar para chamar atenção
+        this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+
+        // EVENTOS DE MOUSE/TOUCH (Mouse "limpa" o foco do teclado)
+        this.input.on('pointerdown', () => this.limparFocoTeclado());
+
         this.input.on('dragstart', (pointer, lixo) => {
             lixo.setDepth(100);
             this.tweens.add({ targets: lixo, scale: 0.6, duration: 150, ease: 'Back.easeOut' });
@@ -86,13 +109,7 @@ export default class SepararLixo extends Phaser.Scene {
         });
 
         this.input.on('drop', (pointer, lixo, zonaDrop) => {
-            const lixeiraImg = zonaDrop.getData('objeto_visual');
-
-            if (lixo.getData('tipo_lixo') === zonaDrop.getData('tipo_lixo_correto')) {
-                this.processarAcerto(lixo, zonaDrop, lixeiraImg);
-            } else {
-                this.processarErro(lixo, lixeiraImg);
-            }
+            this.avaliarJogada(lixo, zonaDrop);
         });
 
         this.input.on('dragend', (pointer, lixo, dropped) => {
@@ -101,83 +118,103 @@ export default class SepararLixo extends Phaser.Scene {
             lixo.setDepth(1);
         });
 
+        // Inicializa mecânicas
+        this.configurarTeclado();
         this.iniciarGeradorEstatico();
+
+        // Anúncio de boas vindas
+        this.time.delayedCall(500, () => {
+            this.falar("Jogo Coleta Seletiva iniciado. Use as setas para focar nos lixos e Enter para selecionar. Ou use o mouse para arrastar.");
+        });
+    }
+
+    // --- LÓGICA CENTRAL DE ACERTO/ERRO (Compartilhada por Mouse e Teclado) ---
+    avaliarJogada(lixo, zonaDrop) {
+        const lixeiraImg = zonaDrop.getData('objeto_visual');
+        const tipoLixo = lixo.getData('tipo_lixo');
+        const tipoCorreto = zonaDrop.getData('tipo_lixo_correto');
+
+        const configLixo = this.configLixo[tipoLixo];
+        const configLixeiraCorreta = this.configLixo[tipoCorreto];
+
+        if (tipoLixo === tipoCorreto) {
+            this.falar(`Correto! ${configLixo.nome} colocado na lixeira ${configLixo.corLixeira}.`);
+            this.processarAcerto(lixo, zonaDrop, lixeiraImg);
+        } else {
+            this.falar(`Ops, errado. ${configLixo.nome} não vai na lixeira ${configLixeiraCorreta.corLixeira}. O lixo voltou pro chão.`);
+            this.processarErro(lixo, lixeiraImg);
+        }
     }
 
     processarAcerto(lixo, zonaDrop, lixeiraImg) {
         const particles = this.add.particles(zonaDrop.x, zonaDrop.y, lixo.texture.key, {
-            speed: { min: -250, max: 250 },
-            angle: { min: 0, max: 360 },
-            scale: { start: 0.4, end: 0 },
-            lifespan: 600,
-            gravityY: 400,
-            quantity: 20
+            speed: { min: -250, max: 250 }, angle: { min: 0, max: 360 },
+            scale: { start: 0.4, end: 0 }, lifespan: 600, gravityY: 400, quantity: 20
         });
         this.time.delayedCall(150, () => particles.stop());
 
         this.score++;
-        this.itensAtuais--;
         this.scoreText.setText(`Acertos: ${this.score} / ${this.scoreToWin}`);
         
-        // Efeito da lixeira "comendo" o lixo
-        this.tweens.add({
-            targets: lixeiraImg,
-            scale: 1,
-            duration: 100,
-            yoyo: true
-        });
+        this.tweens.add({ targets: lixeiraImg, scale: 1, duration: 100, yoyo: true });
 
+        // Remove do array de controle antes de destruir
+        this.lixosEmCena = this.lixosEmCena.filter(item => item !== lixo);
         lixo.destroy();
-        if (this.score >= this.scoreToWin) this.ganharJogo();
+
+        if (this.estadoTeclado === 'SEGURANDO') {
+            this.estadoTeclado = 'LIVRE';
+            this.limparFocoTeclado();
+        }
+
+        if (this.score >= this.scoreToWin) {
+            this.ganharJogo();
+        }
     }
 
     processarErro(lixo, lixeiraImg) {
         if (lixeiraImg) {
             lixeiraImg.setTint(0xff0000);
             this.tweens.add({
-                targets: lixeiraImg,
-                x: lixeiraImg.x + 12,
-                duration: 60,
-                repeat: 3,
-                yoyo: true,
-                onComplete: () => lixeiraImg.clearTint()
+                targets: lixeiraImg, x: lixeiraImg.x + 12, duration: 60,
+                repeat: 3, yoyo: true, onComplete: () => lixeiraImg.clearTint()
             });
         }
 
         const escalaBase = Math.min(this.scale.width / 1920, this.scale.height / 1080) * 0.55;
         this.tweens.add({
-            targets: lixo,
-            x: lixo.getData('origemX'),
-            y: lixo.getData('origemY'),
-            scale: escalaBase,
-            duration: 600,
-            ease: 'Elastic.easeOut'
+            targets: lixo, x: lixo.getData('origemX'), y: lixo.getData('origemY'),
+            scale: escalaBase, duration: 600, ease: 'Elastic.easeOut'
         });
+
+        // Se errou pelo teclado, solta o lixo e mantém o foco nele pra tentar de novo
+        if (this.estadoTeclado === 'SEGURANDO') {
+            this.estadoTeclado = 'LIVRE';
+            lixo.clearTint();
+            this.aplicarFoco(this.lixosEmCena.indexOf(lixo));
+        }
     }
 
     iniciarGeradorEstatico() {
         this.spawnTimer = this.time.addEvent({
-            delay: 1500, 
-            callback: this.spawnLixo,
-            callbackScope: this,
-            loop: true
+            delay: 1800, callback: this.spawnLixo, callbackScope: this, loop: true
         });
     }
 
     spawnLixo() {
-        if (this.itensAtuais >= this.maxItensNaTela) return;
+        if (this.lixosEmCena.length >= this.maxItensNaTela) return;
         const { width, height } = this.scale;
         const tipos = Object.keys(this.configLixo);
         const tipoAleatorio = Phaser.Utils.Array.GetRandom(tipos);
+        const dados = this.configLixo[tipoAleatorio];
         
         const xPos = Phaser.Math.Between(width * 0.2, width * 0.8);
         const yPos = Phaser.Math.Between(height * 0.35, height * 0.55);
-
-        // Escala proporcional à resolução base (1920x1080)
         const escalaBase = Math.min(width / 1920, height / 1080) * 0.55;
 
-        const lixo = this.add.sprite(xPos, yPos, this.configLixo[tipoAleatorio].itemImg)
+        const lixo = this.add.sprite(xPos, yPos, dados.itemImg)
             .setData('tipo_lixo', tipoAleatorio)
+            .setData('nome_acessivel', dados.nome)
             .setData('origemX', xPos)
             .setData('origemY', yPos)
             .setInteractive()
@@ -185,7 +222,131 @@ export default class SepararLixo extends Phaser.Scene {
 
         this.input.setDraggable(lixo);
         this.tweens.add({ targets: lixo, scale: escalaBase, duration: 450, ease: 'Back.easeOut' });
-        this.itensAtuais++;
+        
+        this.lixosEmCena.push(lixo);
+
+        // Se está navegando pelo teclado e estava sem opções, avisa do novo item
+        if (this.estadoTeclado === 'LIVRE' && this.lixosEmCena.length === 1 && this.indiceFoco !== -1) {
+            this.falar("Novos lixos apareceram na tela. Use as setas para focar.");
+        }
+    }
+
+    // --- CONTROLES DE ACESSIBILIDADE POR TECLADO ---
+    configurarTeclado() {
+        this.input.keyboard.on('keydown', (event) => {
+            const keys = [37, 39, 38, 40, 13, 32, 27]; // Arrows, Enter, Space, Esc
+            if (keys.includes(event.keyCode)) event.preventDefault();
+
+            if (this.estadoTeclado === 'FIM') {
+                if (event.keyCode === 13 || event.keyCode === 32) this.encerrarVoltarMenu();
+                return;
+            }
+
+            // ESC cancela o agarre do lixo
+            if (event.keyCode === 27 && this.estadoTeclado === 'SEGURANDO') {
+                this.falar("Seleção cancelada.");
+                this.estadoTeclado = 'LIVRE';
+                this.lixoSegurado.clearTint();
+                this.aplicarFoco(this.lixosEmCena.indexOf(this.lixoSegurado));
+                return;
+            }
+
+            // Seta Direita
+            if (event.keyCode === 39 || event.keyCode === 40) {
+                this.navegarTeclado(1);
+            }
+            // Seta Esquerda
+            if (event.keyCode === 37 || event.keyCode === 38) {
+                this.navegarTeclado(-1);
+            }
+            // Enter / Espaço
+            if (event.keyCode === 13 || event.keyCode === 32) {
+                this.interagirTeclado();
+            }
+
+            // ---------------------------------------------------------
+            // LEGENDA DE ACESSIBILIDADE (Apenas Computadores)
+            // ---------------------------------------------------------
+            if (this.sys.game.device.os.desktop) {
+                // Posiciona o texto bem no rodapé da tela
+                this.add.text(width / 2, height - 35, '⌨️ TECLADO: Use Setas para navegar | ENTER para selecionar | ESC para soltar', { 
+                    fontSize: '22px', 
+                    fill: '#aaaaaa', 
+                    fontFamily: 'Arial',
+                    align: 'center'
+                }).setOrigin(0.5);
+            }
+        });
+    }
+
+    navegarTeclado(direcao) {
+        if (this.estadoTeclado === 'LIVRE') {
+            if (this.lixosEmCena.length === 0) return;
+            this.indiceFoco += direcao;
+            if (this.indiceFoco >= this.lixosEmCena.length) this.indiceFoco = 0;
+            if (this.indiceFoco < 0) this.indiceFoco = this.lixosEmCena.length - 1;
+            
+            this.aplicarFoco(this.indiceFoco);
+        } 
+        else if (this.estadoTeclado === 'SEGURANDO') {
+            this.indiceFoco += direcao;
+            if (this.indiceFoco >= this.lixeirasEmCena.length) this.indiceFoco = 0;
+            if (this.indiceFoco < 0) this.indiceFoco = this.lixeirasEmCena.length - 1;
+            
+            this.aplicarFocoLixeira(this.indiceFoco);
+        }
+    }
+
+    interagirTeclado() {
+        if (this.estadoTeclado === 'LIVRE') {
+            if (this.indiceFoco === -1 || !this.lixosEmCena[this.indiceFoco]) return;
+            
+            // "Agarra" o lixo
+            this.lixoSegurado = this.lixosEmCena[this.indiceFoco];
+            this.lixoSegurado.setTint(0xeeeeee);
+            this.estadoTeclado = 'SEGURANDO';
+            this.falar(`${this.lixoSegurado.getData('nome_acessivel')} selecionado. Use as setas para escolher a lixeira e pressione Enter.`);
+            
+            // Força o foco para a primeira lixeira imediatamente
+            this.indiceFoco = 0;
+            this.aplicarFocoLixeira(0);
+        } 
+        else if (this.estadoTeclado === 'SEGURANDO') {
+            if (this.indiceFoco === -1 || !this.lixeirasEmCena[this.indiceFoco]) return;
+            
+            // "Solta" o lixo na lixeira
+            const lixeiraAlvo = this.lixeirasEmCena[this.indiceFoco];
+            this.avaliarJogada(this.lixoSegurado, lixeiraAlvo);
+        }
+    }
+
+    aplicarFoco(indice) {
+        const item = this.lixosEmCena[indice];
+        if (!item) return;
+
+        this.cursorFoco.setVisible(true);
+        this.cursorFoco.width = item.displayWidth + 30;
+        this.cursorFoco.height = item.displayHeight + 30;
+        this.cursorFoco.setPosition(item.x, item.y);
+        
+        this.falar(`Lixo: ${item.getData('nome_acessivel')}. ${indice + 1} de ${this.lixosEmCena.length}. Pressione Enter para selecionar.`);
+    }
+
+    aplicarFocoLixeira(indice) {
+        const lixeira = this.lixeirasEmCena[indice];
+        if (!lixeira) return;
+
+        this.cursorFoco.setVisible(true);
+        this.cursorFoco.width = 300;
+        this.cursorFoco.height = 420;
+        this.cursorFoco.setPosition(lixeira.x, lixeira.y);
+        
+        this.falar(`${lixeira.getData('nome_acessivel')}.`);
+    }
+
+    limparFocoTeclado() {
+        this.indiceFoco = -1;
+        this.cursorFoco.setVisible(false);
     }
 
     ganharJogo() {
@@ -197,15 +358,26 @@ export default class SepararLixo extends Phaser.Scene {
             fontSize: '110px', fill: '#00ff00', fontFamily: 'Arial Black' 
         }).setOrigin(0.5).setDepth(1001);
 
-        const btn = this.add.text(width/2, height/2 + 130, ' VOLTAR AO MENU ', { 
-            fontSize: '48px', backgroundColor: '#27ae60', padding: { x: 40, y: 20 }, fontFamily: 'Arial'
+        this.btnVoltar = this.add.text(width/2, height/2 + 130, ' VOLTAR AO MENU \n [PRESSIONE ENTER]', { 
+            fontSize: '48px', backgroundColor: '#27ae60', padding: { x: 40, y: 20 }, fontFamily: 'Arial', align: 'center'
         }).setOrigin(0.5).setDepth(1001).setInteractive({ useHandCursor: true });
 
-        btn.on('pointerdown', () => {
-            this.game.destroy(true, false);
-            if (window.parent && window.parent.ponte) {
-                window.parent.ponte.emitir('VOLTAR_MENU');
-            }
-        });
+        // Foco Visual no Fim
+        this.cursorFoco.setVisible(true).setDepth(1002);
+        this.cursorFoco.width = this.btnVoltar.width + 20;
+        this.cursorFoco.height = this.btnVoltar.height + 20;
+        this.cursorFoco.setPosition(this.btnVoltar.x, this.btnVoltar.y);
+
+        this.estadoTeclado = 'FIM';
+        this.falar("Você ganhou! Muito bem. Botão Voltar ao Menu selecionado. Pressione Enter.");
+
+        this.btnVoltar.on('pointerdown', () => this.encerrarVoltarMenu());
+    }
+
+    encerrarVoltarMenu() {
+        this.game.destroy(true, false);
+        if (window.parent && window.parent.ponte) {
+            window.parent.ponte.emitir('VOLTAR_MENU');
+        }
     }
 }

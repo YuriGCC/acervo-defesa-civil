@@ -108,8 +108,6 @@
 
     <div
         id="container-menu"
-        role="application"
-        aria-label="Acervo de Jogos Educativos - Menu de seleção de jogos"
     ></div>
 
     <div
@@ -131,15 +129,17 @@
     <script src="main.js"></script>
 
     <script>
-
+        // Proteção contra "Framebuffer status: Incomplete Attachment"
         window.addEventListener('load', () => {
-            // Phaser pode levar alguns frames para injetar o canvas
             const tentarRotularCanvas = (tentativas = 0) => {
                 const canvas = document.querySelector('#container-menu canvas');
                 if (canvas) {
-                    canvas.setAttribute('role', 'img');
+                    canvas.setAttribute('role', 'application');
+                    canvas.setAttribute('aria-roledescription', 'game');
                     canvas.setAttribute('aria-label', 'Menu interativo de seleção de jogos educativos. Use as setas do teclado para navegar.');
                     canvas.setAttribute('tabindex', '0');
+                    
+                    canvas.focus(); 
                 } else if (tentativas < 20) {
                     setTimeout(() => tentarRotularCanvas(tentativas + 1), 100);
                 }
