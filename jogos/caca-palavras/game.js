@@ -71,12 +71,14 @@ function iniciarJogo() {
     document.getElementById('totalCount').textContent = NUM_PALAVRAS;
 
     gerarGrade();
-    renderizarGrade();
     renderizarListaPalavras();
     atualizarDica('🛡️ Encontre as palavras relacionadas à Defesa Civil e prevenção de desastres!');
     atualizarBarraSelecionada('');
 
     document.getElementById('gameScreen').classList.remove('hidden');
+
+    // Aguarda dois frames para o layout ser pintado antes de calcular as células
+    requestAnimationFrame(() => requestAnimationFrame(() => renderizarGrade()));
 }
 
 // ============================================================
@@ -148,12 +150,125 @@ function gerarGrade() {
 // ============================================================
 // RENDERIZAÇÃO
 // ============================================================
+function calcularTamanhoCell() {
+    const container   = document.querySelector('.game-container');
+    const header      = document.querySelector('.game-header');
+    const gameScreen  = document.getElementById('gameScreen');
+    const barra       = document.querySelector('.selected-word-bar');
+    const gridArea    = document.querySelector('.grid-area');
+    const wordsPanel  = document.querySelector('.words-panel');
+
+    if (!container || !header || !gameScreen || !gridArea) return { cellSize: 30, gap: 3 };
+
+    const isPortrait = window.innerHeight > window.innerWidth;
+
+    const containerH = container.clientHeight;
+    const containerW = container.clientWidth;
+    const headerH    = header.offsetHeight;
+    const barraH     = barra ? barra.offsetHeight + 8 : 44; // +gap
+    const screenPad  = 10 * 2; // padding do game-screen (top+bottom)
+
+    // Espaço vertical disponível para o grid
+    const dispH = containerH - headerH - barraH - screenPad;
+
+    let dispW;
+    if (isPortrait) {
+        // Em portrait o painel fica embaixo — grid usa toda a largura
+        // Se o painel ainda não foi pintado, estima 25% da altura disponível
+        const panelH = (wordsPanel && wordsPanel.offsetHeight > 0)
+            ? wordsPanel.offsetHeight
+            : Math.min(220, Math.max(130, dispH * 0.28));
+        const gridH  = dispH - panelH - 12; // 12 = gap entre grid-area e painel
+        const areaW  = containerW - screenPad;
+
+        const gap = Math.max(2, Math.floor(Math.min(areaW, gridH) / GRID_SIZE / 14));
+        const byW = Math.floor((areaW  - gap * (GRID_SIZE - 1)) / GRID_SIZE);
+        const byH = Math.floor((gridH  - gap * (GRID_SIZE - 1)) / GRID_SIZE);
+        const cellSize = Math.max(16, Math.min(byW, byH, 52));
+        const fontSize = Math.max(0.5, Math.min(cellSize / 34, 1.4));
+
+        document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+        document.documentElement.style.setProperty('--cell-gap',  `${gap}px`);
+        document.documentElement.style.setProperty('--cell-font', `${fontSize}em`);
+        return { cellSize, gap };
+    }
+
+    // Landscape: painel lateral ocupa clamp(160px, 22vw, 280px)
+    const panelW  = Math.min(280, Math.max(160, containerW * 0.22));
+    const layoutGap = Math.min(12, containerW * 0.012);
+    dispW = containerW - panelW - layoutGap - screenPad;
+
+    const gap = Math.max(2, Math.floor(Math.min(dispW, dispH) / GRID_SIZE / 14));
+    const byW = Math.floor((dispW - gap * (GRID_SIZE - 1)) / GRID_SIZE);
+    const byH = Math.floor((dispH - gap * (GRID_SIZE - 1)) / GRID_SIZE);
+    const cellSize = Math.max(16, Math.min(byW, byH, 52));
+    const fontSize = Math.max(0.5, Math.min(cellSize / 34, 1.4));
+
+    document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+    document.documentElement.style.setProperty('--cell-gap',  `${gap}px`);
+    document.documentElement.style.setProperty('--cell-font', `${fontSize}em`);
+    return { cellSize, gap };
+}
+
+function getCelulaEmPonto(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    if (el.classList.contains('cell')) return el;
+    // Verifica pai imediato (caso o texto interno seja o alvo)
+    if (el.parentElement && el.parentElement.classList.contains('cell')) return el.parentElement;
+    return null;
+}
+
+function iniciarTouchDrag(event) {
+    event.preventDefault();
+    const touch = event.touches[0];
+    const cel = getCelulaEmPonto(touch.clientX, touch.clientY);
+    if (!cel) return;
+    const r = parseInt(cel.dataset.r);
+    const c = parseInt(cel.dataset.c);
+    clicarCelula(r, c, cel);
+}
+
+function moverTouchDrag(event) {
+    event.preventDefault();
+    const touch = event.touches[0];
+    const cel = getCelulaEmPonto(touch.clientX, touch.clientY);
+
+    if (!cel) {
+        // Saiu dos limites da grade — encerra graciosamente
+        finalizarTouchDrag(event);
+        return;
+    }
+
+    const r = parseInt(cel.dataset.r);
+    const c = parseInt(cel.dataset.c);
+    const chave = `${r},${c}`;
+
+    // Evita reprocessar a mesma célula
+    if (celulasSelecionadas.length > 0 &&
+        celulasSelecionadas[celulasSelecionadas.length - 1].chave === chave) return;
+
+    clicarCelula(r, c, cel);
+}
+
+function finalizarTouchDrag(event) {
+    // verificarPalavra() já foi chamado incrementalmente via clicarCelula
+    // Nenhuma ação adicional necessária no momento
+}
 
 function renderizarGrade() {
     const container = document.getElementById('wordGrid');
     container.innerHTML = '';
-    container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 44px)`;
-    container.style.gridTemplateRows = `repeat(${GRID_SIZE}, 44px)`;
+
+    container.addEventListener('touchstart', iniciarTouchDrag, { passive: false });
+    container.addEventListener('touchmove',  moverTouchDrag,   { passive: false });
+    container.addEventListener('touchend',   finalizarTouchDrag);
+
+    const { cellSize, gap } = calcularTamanhoCell();
+
+    container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, ${cellSize}px)`;
+    container.style.gridTemplateRows = `repeat(${GRID_SIZE}, ${cellSize}px)`;
+    container.style.gap = `${gap}px`;
 
     for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -163,10 +278,29 @@ function renderizarGrade() {
             cell.dataset.r = r;
             cell.dataset.c = c;
             cell.addEventListener('click', () => clicarCelula(r, c, cell));
+            cell.setAttribute('tabindex', '0');
+            cell.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    clicarCelula(r, c, cell);
+                }
+            });
             container.appendChild(cell);
         }
     }
 }
+
+// Recalcula o grid ao redimensionar a janela
+let _resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+        const gameScreen = document.getElementById('gameScreen');
+        if (gameScreen && !gameScreen.classList.contains('hidden')) {
+            renderizarGrade();
+        }
+    }, 120);
+});
 
 function renderizarListaPalavras() {
     const container = document.getElementById('wordList');
@@ -274,6 +408,14 @@ function ehDirecaoPermitida(dr, dc) {
     return false;
 }
 
+function anunciarAria(texto) {
+    const el = document.getElementById('ariaAnnouncer');
+    if (!el) return;
+    el.textContent = '';
+    // Força re-anúncio mesmo se o texto for igual ao anterior
+    requestAnimationFrame(() => { el.textContent = texto; });
+}
+
 function verificarPalavra(palavraAtual) {
     const match = palavrasSelecionadas.find(
         p => p.palavra === palavraAtual && !palavrasEncontradas.has(p.palavra)
@@ -297,6 +439,7 @@ function verificarPalavra(palavraAtual) {
 
         document.getElementById('foundCount').textContent = palavrasEncontradas.size;
         atualizarDica(`✅ "${match.palavra}" encontrada! ${match.dica}`);
+        anunciarAria(`Palavra "${match.palavra}" encontrada! ${palavrasEncontradas.size} de ${palavrasSelecionadas.length}.`);
         celulasSelecionadas = [];
         atualizarBarraSelecionada('');
 

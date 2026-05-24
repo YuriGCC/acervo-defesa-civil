@@ -14,7 +14,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: clamp(4px, 1vw, 10px);
     overflow: hidden;
 }
 
@@ -22,7 +22,7 @@ body {
     width: 98vw;
     height: 98vh;
     background: white;
-    border-radius: 20px;
+    border-radius: clamp(10px, 2vw, 20px);
     box-shadow: 0 15px 50px rgba(0,0,0,0.4);
     display: flex;
     flex-direction: column;
@@ -33,7 +33,7 @@ body {
 /* HEADER */
 .game-header {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    padding: 10px 20px;
+    padding: clamp(6px, 1.2vh, 12px) clamp(10px, 2vw, 20px);
     text-align: center;
     color: white;
     position: relative;
@@ -43,21 +43,26 @@ body {
 
 .btn-back {
     position: absolute;
-    left: 20px;
+    left: clamp(8px, 1.5vw, 20px);
     top: 50%;
     transform: translateY(-50%);
     background: rgba(255,255,255,0.2);
     color: white;
     border: 2px solid white;
-    padding: 8px 15px;
-    font-size: 1em;
+    min-height: 44px;
+    padding: clamp(8px, 0.8vh, 12px) clamp(8px, 1.2vw, 15px);
+    font-size: clamp(0.7em, 1.5vw, 1em);
     border-radius: 25px;
     cursor: pointer;
     font-weight: bold;
+    white-space: nowrap;
 }
 
-.game-header h1 { font-size: 1.6em; margin-bottom: 2px; }
-.score-board { font-size: 1.1em; }
+.game-header h1 {
+    font-size: clamp(0.9em, 2.5vw, 1.6em);
+    margin-bottom: 2px;
+}
+.score-board { font-size: clamp(0.8em, 1.8vw, 1.1em); }
 
 /* INTRO */
 .intro-screen {
@@ -66,6 +71,7 @@ body {
     justify-content: center;
     align-items: center;
     background: radial-gradient(circle, #ffffff 0%, #f0f4ff 100%);
+    padding: clamp(10px, 2vw, 20px);
 }
 
 .intro-content {
@@ -73,28 +79,28 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 15px;
-    max-width: 600px;
-    padding: 20px;
+    gap: clamp(8px, 1.5vh, 15px);
+    max-width: min(600px, 90vw);
+    padding: clamp(10px, 2vw, 20px);
 }
 
-.intro-icon { font-size: 5em; }
+.intro-icon { font-size: clamp(2.5em, 8vw, 5em); }
 
 .intro-content h2 {
-    font-size: 3em;
+    font-size: clamp(1.5em, 5vw, 3em);
     color: #667eea;
 }
 
 .intro-content p {
-    font-size: 1.5em;
+    font-size: clamp(0.9em, 2.5vw, 1.5em);
     color: #444;
 }
 
 .hint-text {
-    font-size: 1.2em !important;
+    font-size: clamp(0.75em, 1.8vw, 1.2em) !important;
     color: #888 !important;
     background: #f0f4ff;
-    padding: 10px 20px;
+    padding: clamp(6px, 1vh, 10px) clamp(10px, 2vw, 20px);
     border-radius: 10px;
 }
 
@@ -102,14 +108,14 @@ body {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     color: white;
     border: none;
-    padding: 20px 70px;
-    font-size: 2em;
+    padding: clamp(12px, 2vh, 20px) clamp(30px, 6vw, 70px);
+    font-size: clamp(1em, 3vw, 2em);
     border-radius: 60px;
     cursor: pointer;
     font-weight: bold;
     box-shadow: 0 10px 30px rgba(245,87,108,0.4);
     transition: transform 0.2s;
-    margin-top: 10px;
+    margin-top: clamp(5px, 1vh, 10px);
 }
 
 .btn-start:active { transform: scale(0.95); }
@@ -120,8 +126,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    max-height: calc(98vh - 60px);
-    padding: 10px;
+    padding: clamp(5px, 1vw, 10px);
     overflow: hidden;
     isolation: isolate;
 }
@@ -129,23 +134,36 @@ body {
 .game-layout {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 12px;
+    /* landscape: grid à esquerda, painel à direita */
+    grid-template-columns: 1fr clamp(160px, 22vw, 280px);
+    gap: clamp(6px, 1.2vw, 12px);
     min-height: 0;
+}
+
+/* portrait: empilha grid em cima, painel embaixo */
+@media (orientation: portrait) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+    }
+    .words-panel {
+        max-height: clamp(130px, 25vh, 220px);
+    }
 }
 
 /* GRID */
 .grid-area {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: clamp(4px, 0.8vh, 8px);
     min-height: 0;
 }
 
 .word-grid {
     flex: 1;
     display: grid;
-    gap: 4px;
+    /* gap e tamanho das células são definidos via JS com base na tela */
+    gap: var(--cell-gap, 3px);
     min-height: 0;
     overflow: hidden;
     align-content: center;
@@ -153,14 +171,15 @@ body {
 }
 
 .cell {
-    width: 44px;
-    height: 44px;
+    /* tamanho definido via JS com --cell-size */
+    width: var(--cell-size, 44px);
+    height: var(--cell-size, 44px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3em;
+    font-size: var(--cell-font, 1.1em);
     font-weight: bold;
-    border-radius: 8px;
+    border-radius: clamp(4px, 0.8vw, 8px);
     background: #f0f4ff;
     border: 2px solid #d0d8ff;
     cursor: pointer;
@@ -175,7 +194,7 @@ body {
     background: #667eea;
     color: white;
     border-color: #4a5fd4;
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .cell.found {
@@ -221,57 +240,65 @@ body {
 .selected-word-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: clamp(5px, 1vw, 10px);
     background: #f8f9fa;
     border-radius: 12px;
-    padding: 8px 15px;
+    padding: clamp(5px, 0.8vh, 8px) clamp(8px, 1.5vw, 15px);
     flex-shrink: 0;
 }
 
 .selected-word-bar .label {
-    font-size: 1em;
+    font-size: clamp(0.75em, 1.5vw, 1em);
     color: #666;
     font-weight: bold;
+    white-space: nowrap;
 }
 
 .selected-display {
     flex: 1;
-    font-size: 1.4em;
+    font-size: clamp(0.9em, 2vw, 1.4em);
     font-weight: bold;
     color: #667eea;
-    letter-spacing: 4px;
+    letter-spacing: clamp(1px, 0.5vw, 4px);
     text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .btn-clear {
     background: #dc3545;
     color: white;
     border: none;
-    width: 32px;
-    height: 32px;
+    min-width: 44px;
+    min-height: 44px;
+    width: clamp(32px, 4vw, 44px);
+    height: clamp(32px, 4vw, 44px);
     border-radius: 50%;
-    font-size: 1em;
+    padding: 0;
+    font-size: clamp(0.75em, 1.5vw, 1em);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 /* WORDS PANEL */
 .words-panel {
     background: #f8f9fa;
-    border-radius: 15px;
-    padding: 12px;
+    border-radius: clamp(8px, 1.5vw, 15px);
+    padding: clamp(6px, 1vw, 12px);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: clamp(4px, 0.8vh, 8px);
     min-height: 0;
     overflow: hidden;
 }
 
 .words-panel h3 {
     color: #667eea;
-    font-size: 1.1em;
+    font-size: clamp(0.75em, 1.5vw, 1.1em);
     text-align: center;
     flex-shrink: 0;
 }
@@ -281,7 +308,7 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: clamp(3px, 0.5vh, 5px);
 }
 
 .word-list::-webkit-scrollbar { width: 6px; }
@@ -290,7 +317,7 @@ body {
 .word-item {
     background: white;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: clamp(4px, 0.7vh, 8px) clamp(6px, 1vw, 12px);
     border: 2px solid #e0e6ff;
     display: flex;
     flex-direction: column;
@@ -305,7 +332,7 @@ body {
 }
 
 .word-item .word-name {
-    font-size: 1em;
+    font-size: clamp(0.7em, 1.4vw, 1em);
     font-weight: bold;
     color: #333;
     text-transform: uppercase;
@@ -318,7 +345,7 @@ body {
 }
 
 .word-item .word-tip {
-    font-size: 0.75em;
+    font-size: clamp(0.6em, 1.1vw, 0.75em);
     color: #888;
     line-height: 1.2;
 }
@@ -327,10 +354,10 @@ body {
 .tip-box {
     background: #fff3cd;
     border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 0.85em;
+    padding: clamp(5px, 0.8vh, 8px) clamp(6px, 1vw, 12px);
+    font-size: clamp(0.65em, 1.2vw, 0.85em);
     color: #856404;
-    min-height: 50px;
+    min-height: clamp(36px, 6vh, 50px);
     display: flex;
     align-items: center;
     text-align: center;
@@ -345,6 +372,7 @@ body {
     justify-content: center;
     align-items: center;
     background: radial-gradient(circle, #ffffff 0%, #f0f4ff 100%);
+    padding: clamp(10px, 2vw, 20px);
 }
 
 .completion-content {
@@ -352,23 +380,32 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: clamp(8px, 1.5vh, 15px);
 }
 
-.completion-content h2 { font-size: 3em; color: #28a745; }
-.completion-content p { font-size: 1.4em; color: #444; }
-.completion-msg { font-size: 1.1em !important; color: #667eea !important; }
+.completion-content h2 {
+    font-size: clamp(1.5em, 5vw, 3em);
+    color: #28a745;
+}
+.completion-content p {
+    font-size: clamp(0.9em, 2.5vw, 1.4em);
+    color: #444;
+}
+.completion-msg {
+    font-size: clamp(0.8em, 1.8vw, 1.1em) !important;
+    color: #667eea !important;
+}
 
 .btn-restart {
     background: #28a745;
     color: white;
     border: none;
-    padding: 18px 55px;
-    font-size: 1.6em;
+    padding: clamp(10px, 1.8vh, 18px) clamp(25px, 5vw, 55px);
+    font-size: clamp(1em, 2.5vw, 1.6em);
     border-radius: 50px;
     cursor: pointer;
     font-weight: bold;
-    margin-top: 10px;
+    margin-top: clamp(5px, 1vh, 10px);
     transition: transform 0.2s;
 }
 
@@ -376,8 +413,11 @@ body {
 
 .hidden { display: none !important; }
 
-@media (max-width: 700px) {
-    .game-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-    .words-panel { max-height: 180px; }
-    .cell { width: 34px; height: 34px; font-size: 1em; }
+/* Telas muito baixas em landscape (ex: landscape mobile) */
+@media (max-height: 480px) {
+    .game-header h1 { font-size: 0.85em; }
+    .score-board { font-size: 0.75em; }
+    .words-panel h3 { display: none; }
+    .tip-box { display: none; }
+    .word-item .word-tip { display: none; }
 }
