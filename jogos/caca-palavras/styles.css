@@ -153,12 +153,13 @@ body {
 }
 
 .cell {
-    width: 44px;
-    height: 44px;
+    /* Preenche a trilha da grade (definida via clamp() em game.js), sem tamanho fixo */
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3em;
+    font-size: clamp(0.7em, 2.6vw, 1.3em);
     font-weight: bold;
     border-radius: 8px;
     background: #f0f4ff;
@@ -170,6 +171,18 @@ body {
 }
 
 .cell:hover { background: #dde6ff; border-color: #667eea; }
+
+/* Cursor de navegação por teclado, independente da seleção */
+.cell.cursor {
+    outline: 3px solid #FFD700;
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+#wordGrid:focus-visible {
+    outline: 3px solid #FFD700;
+    outline-offset: 4px;
+}
 
 .cell.selected {
     background: #667eea;
@@ -379,5 +392,13 @@ body {
 @media (max-width: 700px) {
     .game-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
     .words-panel { max-height: 180px; }
-    .cell { width: 34px; height: 34px; font-size: 1em; }
+}
+
+/* Telas muito pequenas ou paisagem baixa */
+@media (max-width: 400px), (max-height: 480px) {
+    .game-header h1 { font-size: 1.2em; }
+    .intro-icon { font-size: 3.5em; }
+    .intro-content h2 { font-size: 2em; }
+    .intro-content p { font-size: 1.1em; }
+    .btn-start { padding: 14px 40px; font-size: 1.4em; }
 }

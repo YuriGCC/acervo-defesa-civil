@@ -143,37 +143,38 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
         }
     };
 
-    // Mostra container do jogo
+    // Esconde o menu
     containerMenu.style.visibility = 'hidden'; 
+    
+    // Garante que o container-jogo ocupe a tela toda via JS (caso o CSS falhe)
+    containerJogo.style.position = 'absolute';
+    containerJogo.style.top = '0';
+    containerJogo.style.left = '0';
+    containerJogo.style.width = '100vw'; // Força largura total da janela
+    containerJogo.style.height = '100vh'; // Força altura total da janela
     containerJogo.style.display = 'block';
+    containerJogo.style.visibility = 'visible';
+    containerJogo.style.zIndex = '999'; // Garante que fique acima de tudo
     containerJogo.innerHTML = '';
 
-    // Força reflow para garantir que dimensões sejam calculadas
-    void containerJogo.offsetHeight;
-    void containerJogo.offsetWidth;
+    // Força o navegador a calcular os estilos recém-aplicados
+    window.getComputedStyle(containerJogo).getPropertyValue('height');
 
     const iframe = document.createElement('iframe');
     iframe.id = 'game-iframe-' + Date.now();
     iframe.src = dados.caminho;
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
+    
+    // Força dimensões absolutas no iframe também
+    iframe.style.position = 'absolute';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.width = '100vw';
+    iframe.style.height = '100vh';
     iframe.style.border = 'none';
-    iframe.style.display = 'block';
 
-    iframe.title = `Jogo: ${dados.nome}`;
-    iframe.setAttribute('aria-label', `Jogo em execução: ${dados.nome}`);
-    iframe.setAttribute('allow', 'autoplay');
 
-    // Define atributos de sandbox
-    iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation-by-user-activation');
-
-    containerJogo.appendChild(iframe);
-
-    // Handler para quando o iframe carregar
-    let iframeLoaded = false;
     const onIframeLoad = () => {
-        if (iframeLoaded) return;
-        iframeLoaded = true;
+
         
         console.log('[TROCAR_JOGO] Iframe carregado:', dados.nome);
         
@@ -186,21 +187,8 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
 
     iframe.addEventListener('load', onIframeLoad);
 
-    // Timeout de segurança (4 segundos) para lidar com casos onde o evento 'load' não dispare
-    setTimeout(() => {
-        if (!iframeLoaded) {
-            console.warn('[TROCAR_JOGO] Timeout esperando iframe carregar');
-            onIframeLoad();
-        }
-    }, 4000);
+    containerJogo.appendChild(iframe);
 
-    // Força verificação após 500ms para lidar com casos onde o evento 'load' não dispare, mas o conteúdo já esteja acessível
-    setTimeout(() => {
-        if (!iframeLoaded && iframe.contentWindow) {
-            console.log('[TROCAR_JOGO] Iframe parece estar carregado (conteúdo acessível)');
-            onIframeLoad();
-        }
-    }, 500);
 });
 
 /**

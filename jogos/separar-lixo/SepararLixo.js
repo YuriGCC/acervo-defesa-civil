@@ -34,33 +34,42 @@ export default class SepararLixo extends Phaser.Scene {
         this.load.image('item_organico', 'assets/organico.png');
     }
 
-    // Atalho para conversar com a div do locutor no HTML
-    falar(mensagem) {
-        if (window.anunciar) window.anunciar(mensagem);
-    }
-
     create() {
         // Reset de variáveis
+        this.falar = criarAnunciador();
+        this.reduzMovimento = prefersReducedMotion();
         this.lixosEmCena = [];
         this.lixeirasEmCena = [];
         this.score = 0;
         this.estadoTeclado = 'LIVRE';
 
         const { width, height } = this.scale;
-        
-        this.add.text(width / 2, 80, 'COLETA SELETIVA', { 
-            fontSize: '84px', fill: '#fff', fontFamily: 'Arial Black' 
+
+        this.add.text(width / 2, 80, 'COLETA SELETIVA', {
+            fontSize: '84px', fill: '#fff', fontFamily: 'Arial Black'
         }).setOrigin(0.5);
 
-        this.scoreText = this.add.text(width / 2, 170, `Acertos: 0 / ${this.scoreToWin}`, { 
+        this.scoreText = this.add.text(width / 2, 170, `Acertos: 0 / ${this.scoreToWin}`, {
             fontSize: '48px', fill: '#ffff00', fontFamily: 'Arial'
         }).setOrigin(0.5);
 
-        const textoChamada = this.add.text(width / 2, 260, 'AJUDE A DEFESA CIVIL: SEPARE O LIXO CORRETAMENTE!', { 
+        const textoChamada = this.add.text(width / 2, 260, 'AJUDE A DEFESA CIVIL: SEPARE O LIXO CORRETAMENTE!', {
             fontSize: '34px', fill: '#00ff00', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5);
 
-        this.tweens.add({ targets: textoChamada, scale: 1.05, duration: 1000, yoyo: true, loop: -1 });
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: textoChamada, scale: 1.05, duration: 1000, yoyo: true, loop: -1 });
+        }
+
+        // Legenda de acessibilidade de teclado (apenas computadores), criada uma única vez
+        if (this.sys.game.device.os.desktop) {
+            this.add.text(width / 2, height - 35, '⌨️ TECLADO: Use Setas para navegar | ENTER para selecionar | ESC para soltar', {
+                fontSize: '22px',
+                fill: '#aaaaaa',
+                fontFamily: 'Arial',
+                align: 'center'
+            }).setOrigin(0.5);
+        }
 
         // CRIAÇÃO DAS LIXEIRAS
         const yPosLixeira = height * 0.78; 
@@ -93,7 +102,9 @@ export default class SepararLixo extends Phaser.Scene {
             .setVisible(false);
 
         // Faz o cursor pulsar para chamar atenção
-        this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+        }
 
         // EVENTOS DE MOUSE/TOUCH (Mouse "limpa" o foco do teclado)
         this.input.on('pointerdown', () => this.limparFocoTeclado());
@@ -147,16 +158,20 @@ export default class SepararLixo extends Phaser.Scene {
     }
 
     processarAcerto(lixo, zonaDrop, lixeiraImg) {
-        const particles = this.add.particles(zonaDrop.x, zonaDrop.y, lixo.texture.key, {
-            speed: { min: -250, max: 250 }, angle: { min: 0, max: 360 },
-            scale: { start: 0.4, end: 0 }, lifespan: 600, gravityY: 400, quantity: 20
-        });
-        this.time.delayedCall(150, () => particles.stop());
+        if (!this.reduzMovimento) {
+            const particles = this.add.particles(zonaDrop.x, zonaDrop.y, lixo.texture.key, {
+                speed: { min: -250, max: 250 }, angle: { min: 0, max: 360 },
+                scale: { start: 0.4, end: 0 }, lifespan: 600, gravityY: 400, quantity: 20
+            });
+            this.time.delayedCall(150, () => particles.stop());
+        }
 
         this.score++;
         this.scoreText.setText(`Acertos: ${this.score} / ${this.scoreToWin}`);
-        
-        this.tweens.add({ targets: lixeiraImg, scale: 1, duration: 100, yoyo: true });
+
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: lixeiraImg, scale: 1, duration: 100, yoyo: true });
+        }
 
         // Remove do array de controle antes de destruir
         this.lixosEmCena = this.lixosEmCena.filter(item => item !== lixo);
@@ -175,16 +190,20 @@ export default class SepararLixo extends Phaser.Scene {
     processarErro(lixo, lixeiraImg) {
         if (lixeiraImg) {
             lixeiraImg.setTint(0xff0000);
-            this.tweens.add({
-                targets: lixeiraImg, x: lixeiraImg.x + 12, duration: 60,
-                repeat: 3, yoyo: true, onComplete: () => lixeiraImg.clearTint()
-            });
+            if (this.reduzMovimento) {
+                this.time.delayedCall(300, () => lixeiraImg.clearTint());
+            } else {
+                this.tweens.add({
+                    targets: lixeiraImg, x: lixeiraImg.x + 12, duration: 60,
+                    repeat: 3, yoyo: true, onComplete: () => lixeiraImg.clearTint()
+                });
+            }
         }
 
         const escalaBase = Math.min(this.scale.width / 1920, this.scale.height / 1080) * 0.55;
         this.tweens.add({
             targets: lixo, x: lixo.getData('origemX'), y: lixo.getData('origemY'),
-            scale: escalaBase, duration: 600, ease: 'Elastic.easeOut'
+            scale: escalaBase, duration: this.reduzMovimento ? 150 : 600, ease: this.reduzMovimento ? 'Linear' : 'Elastic.easeOut'
         });
 
         // Se errou pelo teclado, solta o lixo e mantém o foco nele pra tentar de novo
@@ -262,19 +281,6 @@ export default class SepararLixo extends Phaser.Scene {
             // Enter / Espaço
             if (event.keyCode === 13 || event.keyCode === 32) {
                 this.interagirTeclado();
-            }
-
-            // ---------------------------------------------------------
-            // LEGENDA DE ACESSIBILIDADE (Apenas Computadores)
-            // ---------------------------------------------------------
-            if (this.sys.game.device.os.desktop) {
-                // Posiciona o texto bem no rodapé da tela
-                this.add.text(width / 2, height - 35, '⌨️ TECLADO: Use Setas para navegar | ENTER para selecionar | ESC para soltar', { 
-                    fontSize: '22px', 
-                    fill: '#aaaaaa', 
-                    fontFamily: 'Arial',
-                    align: 'center'
-                }).setOrigin(0.5);
             }
         });
     }

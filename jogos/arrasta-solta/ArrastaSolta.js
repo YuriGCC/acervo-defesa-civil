@@ -19,6 +19,14 @@ export default class ArrastaSolta extends Phaser.Scene {
         this.correctStyle = { ...this.baseStyle, backgroundColor: '#aaffaa', fill: '#003300' };
         this.wrongStyle = { ...this.baseStyle, backgroundColor: '#ffaaaa', fill: '#330000' };
 
+        this.zonasPos = {};
+        this.navegaveis = [];
+        this.indiceFoco = 0;
+        this.estadoTeclado = 'LIVRE'; // 'LIVRE', 'SEGURANDO'
+        this.indiceZonaFoco = 0;
+        this.itemSegurado = null;
+        this.falar = () => {};
+
         this.dadosDasFases = [
             {
                 id: 'gatilho_arrasta_solta_kit',
@@ -60,12 +68,121 @@ export default class ArrastaSolta extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.scale;
+        this.falar = criarAnunciador();
+        this.reduzMovimento = prefersReducedMotion();
 
         this.input.dragDistanceThreshold = 5;
 
         this.desenharEstrutura();
+
+        this.cursorFoco = this.add.rectangle(0, 0, 200, 80, 0x000000, 0)
+            .setStrokeStyle(6, 0xFFD700)
+            .setDepth(500);
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+        }
+
+        this.configurarTeclado();
         this.carregarFase(this.faseAtual);
+    }
+
+    configurarTeclado() {
+        this.input.keyboard.on('keydown', (event) => {
+            const teclas = [37, 38, 39, 40, 13, 32, 27];
+            if (teclas.includes(event.keyCode)) event.preventDefault();
+
+            if (this.estadoTeclado === 'LIVRE') {
+                if (event.keyCode === 39 || event.keyCode === 40) this.moverFoco(1);
+                if (event.keyCode === 37 || event.keyCode === 38) this.moverFoco(-1);
+                if (event.keyCode === 13 || event.keyCode === 32) this.ativarFoco();
+            } else if (this.estadoTeclado === 'SEGURANDO') {
+                if (event.keyCode === 27) this.cancelarSelecao();
+                else if ([37, 38, 39, 40].includes(event.keyCode)) this.alternarZonaFoco();
+                else if (event.keyCode === 13 || event.keyCode === 32) this.confirmarZona();
+            }
+        });
+    }
+
+    moverFoco(delta) {
+        if (this.navegaveis.length === 0) return;
+        this.indiceFoco = ((this.indiceFoco + delta) % this.navegaveis.length + this.navegaveis.length) % this.navegaveis.length;
+        this.atualizarFocoVisual();
+    }
+
+    atualizarFocoVisual() {
+        const alvo = this.navegaveis[this.indiceFoco];
+        if (!alvo) return;
+        this.cursorFoco.setPosition(alvo.x, alvo.y);
+        this.cursorFoco.width = alvo.width + 30;
+        this.cursorFoco.height = alvo.height + 30;
+
+        if (alvo === this.botaoContinuar) {
+            this.falar(`Botão: ${alvo.text}. Pressione Enter para confirmar.`);
+        } else {
+            const jaColocado = alvo.getData('zonaAtual') ? ' já posicionado' : '';
+            this.falar(`Item: ${alvo.getData('textoOriginal')}${jaColocado}. Pressione Enter para escolher onde colocar.`);
+        }
+    }
+
+    ativarFoco() {
+        const alvo = this.navegaveis[this.indiceFoco];
+        if (!alvo) return;
+
+        if (alvo === this.botaoContinuar) {
+            this.tratarCliqueBotao();
+            return;
+        }
+
+        if (alvo.input && alvo.input.enabled === false) return;
+
+        this.itemSegurado = alvo;
+        this.estadoTeclado = 'SEGURANDO';
+        this.indiceZonaFoco = 0;
+        this.falar(`${alvo.getData('textoOriginal')} selecionado. Use as setas para escolher entre ${this.zona1_label.text} e ${this.zona2_label.text}, e pressione Enter para confirmar. Esc cancela.`);
+        this.atualizarFocoZona();
+    }
+
+    alternarZonaFoco() {
+        this.indiceZonaFoco = this.indiceZonaFoco === 0 ? 1 : 0;
+        this.atualizarFocoZona();
+    }
+
+    atualizarFocoZona() {
+        const zonaId = this.indiceZonaFoco === 0 ? 'zona1' : 'zona2';
+        const pos = this.zonasPos[zonaId];
+        this.cursorFoco.setPosition(pos.x, pos.y);
+        this.cursorFoco.width = pos.w + 20;
+        this.cursorFoco.height = pos.h + 20;
+        this.falar(`Zona: ${this[zonaId + '_label'].text}.`);
+    }
+
+    confirmarZona() {
+        const zonaId = this.indiceZonaFoco === 0 ? 'zona1' : 'zona2';
+        const item = this.itemSegurado;
+        const pos = this.zonasPos[zonaId];
+
+        item.setData('zonaAtual', zonaId);
+
+        this.tweens.add({
+            targets: item,
+            x: pos.x,
+            y: pos.y - 60 + (Math.random() * 120),
+            duration: this.reduzMovimento ? 100 : 250,
+            ease: this.reduzMovimento ? 'Linear' : 'Back.easeOut'
+        });
+
+        this.falar(`${item.getData('textoOriginal')} colocado em ${this[zonaId + '_label'].text}.`);
+
+        this.estadoTeclado = 'LIVRE';
+        this.itemSegurado = null;
+        this.atualizarFocoVisual();
+    }
+
+    cancelarSelecao() {
+        this.falar('Seleção cancelada.');
+        this.estadoTeclado = 'LIVRE';
+        this.itemSegurado = null;
+        this.atualizarFocoVisual();
     }
 
     desenharEstrutura() {
@@ -138,6 +255,8 @@ export default class ArrastaSolta extends Phaser.Scene {
     }
 
     setupZona(id, x, y, w, h, cor) {
+        this.zonasPos[id] = { x, y, w, h };
+
         const zona = this.add.zone(x, y, w, h)
             .setRectangleDropZone(w, h)
             .setData('zonaID', id);
@@ -174,13 +293,21 @@ export default class ArrastaSolta extends Phaser.Scene {
                 .setInteractive()
                 .setData('homeX', itemsStartX)
                 .setData('homeY', ty)
-                .setData('alvo', res.alvo);
+                .setData('alvo', res.alvo)
+                .setData('textoOriginal', res.texto);
 
             this.input.setDraggable(txt);
             this.textosArrastaveis.push(txt);
         });
 
         this.botaoContinuar.setText('VERIFICAR').setData('status', 'verificar').setBackgroundColor('#009900');
+
+        this.navegaveis = [...this.textosArrastaveis, this.botaoContinuar];
+        this.indiceFoco = 0;
+        this.estadoTeclado = 'LIVRE';
+        this.itemSegurado = null;
+        this.atualizarFocoVisual();
+        this.falar(`${dados.pergunta} Use as setas para navegar entre os itens e o botão, e Enter para selecionar.`);
     }
 
     validarFase() {
@@ -188,13 +315,15 @@ export default class ArrastaSolta extends Phaser.Scene {
         this.textosArrastaveis.forEach(texto => {
             const correto = texto.getData('alvo') === texto.getData('zonaAtual');
             texto.setStyle(correto ? this.correctStyle : this.wrongStyle);
+            // WCAG 1.4.1: reforço com símbolo, não depende só da cor
+            texto.setText(`${correto ? '✓' : '✗'} ${texto.getData('textoOriginal')}`);
             if (!correto) erros++;
-            texto.input.enabled = false; 
+            texto.input.enabled = false;
         });
 
         if (erros === 0) {
             const eFinal = this.faseAtual === this.dadosDasFases.length - 1;
-            
+
             if (eFinal) {
                 this.mostrarParabensFinal();
                 this.botaoContinuar.setText('FINALIZAR').setData('status', 'finalizar');
@@ -202,8 +331,10 @@ export default class ArrastaSolta extends Phaser.Scene {
                 this.botaoContinuar.setText('PRÓXIMA FASE').setData('status', 'continuar');
             }
             this.botaoContinuar.setBackgroundColor('#009900');
+            this.falar(eFinal ? 'Parabéns, você concluiu o treinamento!' : 'Tudo certo! Pressione o botão Próxima Fase para continuar.');
         } else {
             this.botaoContinuar.setText('TENTAR NOVAMENTE').setData('status', 'tentar_novamente').setBackgroundColor('#cc0000');
+            this.falar(`${erros} ${erros === 1 ? 'item está' : 'itens estão'} no lugar errado. Pressione Tentar Novamente.`);
         }
     }
 
@@ -227,20 +358,25 @@ export default class ArrastaSolta extends Phaser.Scene {
             fontFamily: 'Arial Black'
         }).setOrigin(0.5).setDepth(200).setAlpha(0);
 
-        this.tweens.add({
-            targets: txtParabens,
-            scale: 1,
-            duration: 800,
-            ease: 'Back.easeOut'
-        });
+        if (this.reduzMovimento) {
+            txtParabens.setScale(1);
+            subTxt.setAlpha(1).setY(height / 2 + 100);
+        } else {
+            this.tweens.add({
+                targets: txtParabens,
+                scale: 1,
+                duration: 800,
+                ease: 'Back.easeOut'
+            });
 
-        this.tweens.add({
-            targets: subTxt,
-            alpha: 1,
-            y: height / 2 + 100,
-            duration: 800,
-            delay: 500
-        });
+            this.tweens.add({
+                targets: subTxt,
+                alpha: 1,
+                y: height / 2 + 100,
+                duration: 800,
+                delay: 500
+            });
+        }
 
         this.botaoContinuar.setDepth(201);
     }

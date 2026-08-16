@@ -291,6 +291,13 @@ body {
     cursor: default;
 }
 
+/* Card escolhido via teclado, aguardando o par correspondente */
+.card.selected {
+    border-color: #FFD700;
+    background: #fff8e1;
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.6);
+}
+
 .card.shake { animation: shake 0.5s; }
 @keyframes shake {
     0%, 100% { transform: translateX(0); }

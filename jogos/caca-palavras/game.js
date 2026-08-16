@@ -30,6 +30,9 @@ let palavrasSelecionadas = [];
 let palavrasEncontradas = new Set();
 let celulasSelecionadas = [];
 let celulasEncontradas = new Set();
+let cursorR = 0;
+let cursorC = 0;
+const anunciar = criarAnunciador();
 
 // ============================================================
 // INICIALIZAÇÃO
@@ -49,6 +52,38 @@ document.querySelector('.btn-back').addEventListener('click', () => {
         window.location.href = '../../index.html';
     }
 });
+
+// Navegação por teclado na grade: setas movem o cursor, Enter/Espaço seleciona a célula.
+document.getElementById('wordGrid').addEventListener('keydown', (e) => {
+    const teclasSeta = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    const teclasSelecionar = ['Enter', ' ', 'Spacebar'];
+    if (![...teclasSeta, ...teclasSelecionar].includes(e.key)) return;
+    e.preventDefault();
+
+    if (e.key === 'ArrowUp') moverCursor(-1, 0);
+    else if (e.key === 'ArrowDown') moverCursor(1, 0);
+    else if (e.key === 'ArrowLeft') moverCursor(0, -1);
+    else if (e.key === 'ArrowRight') moverCursor(0, 1);
+    else clicarCelula(cursorR, cursorC, getCelula(cursorR, cursorC));
+});
+
+function moverCursor(dr, dc) {
+    cursorR = Math.min(GRID_SIZE - 1, Math.max(0, cursorR + dr));
+    cursorC = Math.min(GRID_SIZE - 1, Math.max(0, cursorC + dc));
+    atualizarCursorVisual();
+}
+
+function atualizarCursorVisual(inicial = false) {
+    const grade = document.getElementById('wordGrid');
+    grade.querySelectorAll('.cell.cursor').forEach(c => c.classList.remove('cursor'));
+    const cell = getCelula(cursorR, cursorC);
+    if (!cell) return;
+    cell.classList.add('cursor');
+    grade.setAttribute('aria-activedescendant', cell.id);
+    if (!inicial) {
+        anunciar(`Linha ${cursorR + 1}, coluna ${cursorC + 1}, letra ${grid[cursorR][cursorC]}.`);
+    }
+}
 
 function iniciarJogo() {
     palavrasEncontradas.clear();
@@ -77,6 +112,8 @@ function iniciarJogo() {
     atualizarBarraSelecionada('');
 
     document.getElementById('gameScreen').classList.remove('hidden');
+    document.getElementById('wordGrid').focus();
+    anunciar(`Jogo iniciado. Encontre ${NUM_PALAVRAS} palavras na grade. Use as setas para navegar e Enter para selecionar as letras.`);
 }
 
 // ============================================================
@@ -152,20 +189,36 @@ function gerarGrade() {
 function renderizarGrade() {
     const container = document.getElementById('wordGrid');
     container.innerHTML = '';
-    container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 44px)`;
-    container.style.gridTemplateRows = `repeat(${GRID_SIZE}, 44px)`;
+    // Trilhas fluidas: acompanham o viewport em vez de um pixel fixo,
+    // evitando que a grade vaze da tela em telas pequenas.
+    container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, clamp(18px, 4.2vw, 44px))`;
+    container.style.gridTemplateRows = `repeat(${GRID_SIZE}, clamp(18px, 4.2vw, 44px))`;
+    container.setAttribute('role', 'grid');
+    container.setAttribute('aria-label', 'Grade de letras do caça-palavras. Use as setas para mover o cursor e Enter ou Espaço para selecionar uma letra.');
+    container.setAttribute('tabindex', '0');
 
     for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
             cell.textContent = grid[r][c];
+            cell.id = `cell-${r}-${c}`;
+            cell.setAttribute('role', 'gridcell');
             cell.dataset.r = r;
             cell.dataset.c = c;
-            cell.addEventListener('click', () => clicarCelula(r, c, cell));
+            cell.addEventListener('click', () => {
+                cursorR = r;
+                cursorC = c;
+                atualizarCursorVisual(true);
+                clicarCelula(r, c, cell);
+            });
             container.appendChild(cell);
         }
     }
+
+    cursorR = 0;
+    cursorC = 0;
+    atualizarCursorVisual(true);
 }
 
 function renderizarListaPalavras() {
@@ -222,6 +275,7 @@ function clicarCelula(r, c, el) {
                 atualizarBarraSelecionada(grid[r][c]);
             }, 420);
             atualizarBarraSelecionada('');
+            anunciar('Essa letra não continua a linha reta da seleção. Seleção reiniciada nesta letra.');
             return;
         }
     }
@@ -297,6 +351,7 @@ function verificarPalavra(palavraAtual) {
 
         document.getElementById('foundCount').textContent = palavrasEncontradas.size;
         atualizarDica(`✅ "${match.palavra}" encontrada! ${match.dica}`);
+        anunciar(`Palavra encontrada: ${match.palavra}. ${match.dica}`);
         celulasSelecionadas = [];
         atualizarBarraSelecionada('');
 
@@ -321,6 +376,7 @@ function verificarPalavra(palavraAtual) {
             }
             celulasSelecionadas = [];
             setTimeout(() => atualizarBarraSelecionada(''), 420);
+            anunciar('Essa sequência não forma nenhuma palavra da lista. Seleção reiniciada.');
         }
     }
 }
@@ -345,4 +401,6 @@ function atualizarDica(texto) {
 function mostrarConclusao() {
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('completionScreen').classList.remove('hidden');
+    anunciar('Parabéns! Você encontrou todas as palavras. Pressione o botão Jogar Novamente para recomeçar.');
+    document.getElementById('btnRestart').focus();
 }

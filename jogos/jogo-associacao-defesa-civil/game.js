@@ -38,6 +38,8 @@ const gameLevels = [
 
 let currentLevel = 0, score = 0, matchedPairs = 0, draggedCard = null, connections = [];
 let currentTouchPos = null;
+let selectedCard = null;
+const anunciar = criarAnunciador();
 
 const soundCorrect = new Audio('assets/acerto.mp3'), soundError = new Audio('assets/erro.mp3');
 const introScreen = document.getElementById('introScreen'), gameScreen = document.getElementById('gameScreen'), completionScreen = document.getElementById('completionScreen');
@@ -74,6 +76,8 @@ function loadLevel() {
     document.getElementById('instruction').textContent = `Nível ${level.level}: ${level.title}`;
     risksContainer.innerHTML = ''; actionsContainer.innerHTML = '';
 
+    selectedCard = null;
+
     level.pairs.forEach(pair => {
         const riskCard = createCard(pair.risk, 'risk', pair.id);
         setupInteraction(riskCard);
@@ -82,9 +86,12 @@ function loadLevel() {
 
     shuffleArray([...level.pairs]).forEach(pair => {
         const actionCard = createCard(pair.action, 'action', pair.id);
+        setupInteraction(actionCard);
         actionsContainer.appendChild(actionCard);
     });
     resizeCanvas();
+
+    anunciar(`Nível ${level.level}: ${level.title}. Use Tab para navegar entre os cards e Enter para selecionar uma situação e a prevenção correspondente.`);
 }
 
 function createCard(data, type, pairId) {
@@ -93,14 +100,64 @@ function createCard(data, type, pairId) {
     card.dataset.pairId = pairId;
     // role="button" + aria-label tornam o card acessível por teclado e leitores de tela
     card.setAttribute('role', 'button');
-    card.setAttribute('tabindex', type === 'risk' ? '0' : '-1');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-pressed', 'false');
     card.setAttribute('aria-label', `${type === 'risk' ? 'Situação' : 'Prevenção'}: ${data.text}`);
     card.innerHTML = `<div class="card-icon" aria-hidden="true">${data.icon}</div><div class="card-text">${data.text}</div>`;
     return card;
 }
 
+// Seleciona/combina cards via teclado: primeiro Enter escolhe o card,
+// o segundo Enter em um card do tipo oposto tenta formar o par (mesma lógica do drag-and-drop).
+function toggleSelectCard(card) {
+    if (card.classList.contains('matched')) return;
+
+    if (selectedCard === card) {
+        card.classList.remove('selected');
+        card.setAttribute('aria-pressed', 'false');
+        selectedCard = null;
+        anunciar('Seleção cancelada.');
+        return;
+    }
+
+    if (!selectedCard) {
+        selectedCard = card;
+        card.classList.add('selected');
+        card.setAttribute('aria-pressed', 'true');
+        anunciar(`${card.getAttribute('aria-label')} selecionado. Escolha o par correspondente e pressione Enter.`);
+        return;
+    }
+
+    const mesmoTipo = selectedCard.classList.contains('risk') === card.classList.contains('risk');
+    if (mesmoTipo) {
+        selectedCard.classList.remove('selected');
+        selectedCard.setAttribute('aria-pressed', 'false');
+        selectedCard = card;
+        card.classList.add('selected');
+        card.setAttribute('aria-pressed', 'true');
+        anunciar(`${card.getAttribute('aria-label')} selecionado. Escolha o par correspondente e pressione Enter.`);
+        return;
+    }
+
+    const risk = selectedCard.classList.contains('risk') ? selectedCard : card;
+    const action = selectedCard.classList.contains('risk') ? card : selectedCard;
+
+    selectedCard.classList.remove('selected');
+    selectedCard.setAttribute('aria-pressed', 'false');
+    selectedCard = null;
+
+    checkMatch(risk, action);
+}
+
 function setupInteraction(card) {
     card.draggable = true;
+
+    card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            toggleSelectCard(card);
+        }
+    });
 
     // MOUSE EVENTS
     card.addEventListener('dragstart', (e) => {
@@ -179,6 +236,8 @@ function checkMatch(risk, action) {
 
 function handleCorrectMatch(risk, action) {
     risk.classList.add('matched'); action.classList.add('matched');
+    risk.setAttribute('tabindex', '-1'); action.setAttribute('tabindex', '-1');
+    risk.setAttribute('aria-disabled', 'true'); action.setAttribute('aria-disabled', 'true');
     connections.push({ riskId: risk.dataset.pairId, actionId: action.dataset.pairId });
     score += 10; matchedPairs++;
     updateScore();

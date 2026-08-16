@@ -6,11 +6,18 @@ export default class PeDeVento extends Phaser.Scene {
         this.errosAtuais = 0;
         this.gameTimer = null;
         this.eventTimer = null;
-        this.windParticles = null; 
+        this.windParticles = null;
+        this.pausado = false;
+        this.fimDeJogo = false;
+        this.indiceFoco = 0;
+        this.falar = () => {};
     }
 
     create() {
         const { width, height } = this.scale;
+
+        this.falar = criarAnunciador();
+        this.reduzMovimento = prefersReducedMotion();
 
         this.createWindTexture();
 
@@ -29,17 +36,28 @@ export default class PeDeVento extends Phaser.Scene {
             align: 'center', wordWrap: { width: 1200 }
         }).setOrigin(0.5);
 
-        this.tweens.add({
-            targets: msgSeguranca,
-            alpha: 0.6,
-            duration: 1000,
-            yoyo: true,
-            loop: -1
-        });
+        if (!this.reduzMovimento) {
+            this.tweens.add({
+                targets: msgSeguranca,
+                alpha: 0.6,
+                duration: 1000,
+                yoyo: true,
+                loop: -1
+            });
+        }
 
         this.timerText = this.add.text(width / 2, height - 80, 'Tempo: 30s', {
             fontSize: '64px', fill: '#ffff00', fontFamily: 'Arial Black'
         }).setOrigin(0.5);
+
+        this.btnPausar = this.add.text(width - 30, 30, '⏸ PAUSAR (P)', {
+            fontSize: '32px', fill: '#ffffff', backgroundColor: '#34495e', padding: { x: 20, y: 12 }, fontFamily: 'Arial Black'
+        }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
+        this.btnPausar.on('pointerdown', () => this.alternarPausa());
+
+        this.overlayPausa = this.add.text(width / 2, height / 2, 'PAUSADO\nPressione P ou Enter para continuar', {
+            fontSize: '64px', fill: '#ffffff', backgroundColor: '#000000', padding: { x: 40, y: 30 }, align: 'center', fontFamily: 'Arial Black'
+        }).setOrigin(0.5).setDepth(300).setVisible(false);
 
         this.errorText = this.add.text(width / 2, height - 190, 'JANELAS ABERTAS: 0 / 3', {
             fontSize: '48px', fill: '#ffffff', fontFamily: 'Arial Black', backgroundColor: '#c0392b', padding: { x: 25, y: 15 }
@@ -88,7 +106,87 @@ export default class PeDeVento extends Phaser.Scene {
             this.janelas.push(janelaContainer);
         });
 
+        this.cursorFoco = this.add.rectangle(0, 0, 440, 350, 0x000000, 0)
+            .setStrokeStyle(8, 0xFFD700)
+            .setDepth(50);
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+        }
+
+        this.configurarTeclado();
+        this.atualizarFoco(true);
+        this.falar('Pé de Vento iniciado. Feche as janelas que abrirem antes que o tempo acabe. Use as setas para navegar entre as janelas e Enter para fechar. Pressione P a qualquer momento para pausar.');
+
         this.configurarTimers();
+    }
+
+    configurarTeclado() {
+        this.input.keyboard.on('keydown', (event) => {
+            if (this.fimDeJogo) {
+                if (event.keyCode === 13 || event.keyCode === 32) {
+                    event.preventDefault();
+                    this.voltarAoAcervo();
+                }
+                return;
+            }
+
+            if (event.keyCode === 80) { // Tecla P
+                event.preventDefault();
+                this.alternarPausa();
+                return;
+            }
+
+            const teclas = [37, 38, 39, 40, 13, 32];
+            if (!teclas.includes(event.keyCode)) return;
+            event.preventDefault();
+
+            if (this.pausado) {
+                if (event.keyCode === 13 || event.keyCode === 32) this.alternarPausa();
+                return;
+            }
+
+            if (event.keyCode === 39 || event.keyCode === 40) this.moverFoco(1);
+            else if (event.keyCode === 37 || event.keyCode === 38) this.moverFoco(-1);
+            else if (event.keyCode === 13 || event.keyCode === 32) this.ativarFoco();
+        });
+    }
+
+    moverFoco(delta) {
+        const total = this.janelas.length;
+        this.indiceFoco = ((this.indiceFoco + delta) % total + total) % total;
+        this.atualizarFoco();
+    }
+
+    atualizarFoco(inicial = false) {
+        const janela = this.janelas[this.indiceFoco];
+        this.cursorFoco.setPosition(janela.x, janela.y);
+        if (!inicial) {
+            const status = janela.getData('isOpen') ? 'aberta! Pressione Enter para fechar.' : 'fechada.';
+            this.falar(`Janela ${this.indiceFoco + 1} de ${this.janelas.length}, ${status}`);
+        }
+    }
+
+    ativarFoco() {
+        const janela = this.janelas[this.indiceFoco];
+        if (janela.getData('isOpen')) {
+            this.clicarJanela(janela);
+            this.falar('Janela fechada.');
+        }
+    }
+
+    alternarPausa() {
+        this.pausado = !this.pausado;
+
+        if (this.gameTimer) this.gameTimer.paused = this.pausado;
+        if (this.eventTimer) this.eventTimer.paused = this.pausado;
+        if (!this.reduzMovimento) {
+            if (this.pausado) this.tweens.pauseAll();
+            else this.tweens.resumeAll();
+        }
+
+        this.overlayPausa.setVisible(this.pausado);
+        this.btnPausar.setText(this.pausado ? '▶ CONTINUAR (P)' : '⏸ PAUSAR (P)');
+        this.falar(this.pausado ? 'Jogo pausado.' : 'Jogo retomado.');
     }
 
     createWindTexture() {
@@ -141,15 +239,19 @@ export default class PeDeVento extends Phaser.Scene {
     }
 
     clicarJanela(container) {
+        if (this.pausado) return;
+
         if (container.getData('isOpen')) {
 
-            this.tweens.add({
-                targets: container,
-                scale: 0.92,
-                duration: 50,
-                yoyo: true,
-                ease: 'Power1'
-            });
+            if (!this.reduzMovimento) {
+                this.tweens.add({
+                    targets: container,
+                    scale: 0.92,
+                    duration: 50,
+                    yoyo: true,
+                    ease: 'Power1'
+                });
+            }
 
             container.setData('isOpen', false);
             this.desenharJanelaVisual(container.getData('graficoVidro'), false);
@@ -179,20 +281,22 @@ export default class PeDeVento extends Phaser.Scene {
             moldura.lineStyle(15, 0xff0000, 1);
             moldura.strokeRect(-200, -150, 400, 300);
 
-            this.tweens.add({
-                targets: janela,
-                x: janela.x + 15,
-                duration: 60,
-                repeat: 4,
-                yoyo: true,
-                ease: 'Bounce.easeInOut'
-            });
-
-            this.windParticles.startFollow(janela);
-            this.windParticles.emitting = true;
+            if (!this.reduzMovimento) {
+                this.tweens.add({
+                    targets: janela,
+                    x: janela.x + 15,
+                    duration: 60,
+                    repeat: 4,
+                    yoyo: true,
+                    ease: 'Bounce.easeInOut'
+                });
+                this.windParticles.startFollow(janela);
+                this.windParticles.emitting = true;
+            }
 
             this.errosAtuais++;
             this.atualizarTextoErro();
+            this.falar(`Uma janela abriu! Janela ${this.janelas.indexOf(janela) + 1} de ${this.janelas.length}.`);
             if (this.errosAtuais >= this.maxErros) this.perderJogo();
         }
     }
@@ -212,7 +316,11 @@ export default class PeDeVento extends Phaser.Scene {
     finalizarPartida(titulo, corTitulo, subTitulo) {
         if (this.gameTimer) this.gameTimer.destroy();
         if (this.eventTimer) this.eventTimer.destroy();
-        this.windParticles.destroy(); 
+        this.windParticles.destroy();
+
+        this.fimDeJogo = true;
+        this.btnPausar.setVisible(false);
+        this.overlayPausa.setVisible(false);
 
         const { width, height } = this.scale;
         this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85).setDepth(100);
@@ -232,6 +340,13 @@ export default class PeDeVento extends Phaser.Scene {
             .setDepth(101)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.voltarAoAcervo());
+
+        this.cursorFoco.setDepth(102);
+        this.cursorFoco.width = btnSair.width + 20;
+        this.cursorFoco.height = btnSair.height + 20;
+        this.cursorFoco.setPosition(btnSair.x, btnSair.y);
+
+        this.falar(`${titulo} ${subTitulo} Botão Voltar ao Menu selecionado. Pressione Enter.`);
     }
 
     voltarAoAcervo() {

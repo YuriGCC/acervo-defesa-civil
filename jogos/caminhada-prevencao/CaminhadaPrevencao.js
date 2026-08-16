@@ -32,18 +32,70 @@ class Menu extends Phaser.Scene {
     constructor() { super('Menu'); }
     create() {
         const { width, height } = this.scale;
+        this.falar = criarAnunciador();
+        this.reduzMovimento = prefersReducedMotion();
+
         this.add.graphics().fillGradientStyle(0x1a2a6c, 0x1a2a6c, 0xb21f1f, 0xfdbb2d, 1).fillRect(0, 0, width, height);
         this.add.text(width / 2, height * 0.2, 'CAMINHADA DA PREVENÇÃO', { fontSize: '65px', fill: '#fff', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5);
         this.add.text(width / 2, height * 0.4, 'Quantos Jogadores Participarão?', { fontSize: '38px', fill: '#ffcc00', fontFamily: 'Arial Black' }).setOrigin(0.5);
-        [2, 3, 4].forEach((num, i) => {
+
+        this.opcoesNumeros = [2, 3, 4];
+        this.opcoesContainers = [];
+
+        this.opcoesNumeros.forEach((num, i) => {
             let x = width / 2 - 250 + (i * 250);
             let containerBtn = this.add.container(x, height * 0.65);
             let circ = this.add.circle(0, 0, 100, 0x005599).setInteractive({ useHandCursor: true }).setStrokeStyle(6, 0xffffff);
             let txt = this.add.text(0, 0, num, { fontSize: '60px', fill: '#fff', fontFamily: 'Arial Black' }).setOrigin(0.5);
             containerBtn.add([circ, txt]);
-            this.tweens.add({ targets: containerBtn, y: (height * 0.65) - 30, duration: 1500, ease: 'Sine.easeInOut', yoyo: true, loop: -1, delay: i * 200 });
-            circ.on('pointerdown', () => this.scene.start('Tabuleiro', { numJogadores: num }));
+            if (!this.reduzMovimento) {
+                this.tweens.add({ targets: containerBtn, y: (height * 0.65) - 30, duration: 1500, ease: 'Sine.easeInOut', yoyo: true, loop: -1, delay: i * 200 });
+            }
+            circ.on('pointerdown', () => this.iniciarJogo(num));
+            this.opcoesContainers.push(containerBtn);
         });
+
+        this.indiceFoco = 0;
+        this.cursorFoco = this.add.rectangle(0, 0, 220, 220, 0x000000, 0).setStrokeStyle(8, 0xFFD700).setDepth(50);
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+        }
+
+        this.configurarTeclado();
+        this.anunciarFoco();
+        this.falar('Caminhada da Prevenção. Escolha quantos jogadores vão participar: 2, 3 ou 4. Use as setas para navegar e Enter para confirmar.');
+    }
+
+    update() {
+        if (!this.opcoesContainers.length) return;
+        const alvo = this.opcoesContainers[this.indiceFoco];
+        this.cursorFoco.setPosition(alvo.x, alvo.y);
+    }
+
+    configurarTeclado() {
+        this.input.keyboard.on('keydown', (event) => {
+            const teclas = [37, 38, 39, 40, 13, 32];
+            if (!teclas.includes(event.keyCode)) return;
+            event.preventDefault();
+
+            if (event.keyCode === 39 || event.keyCode === 40) this.moverFoco(1);
+            else if (event.keyCode === 37 || event.keyCode === 38) this.moverFoco(-1);
+            else if (event.keyCode === 13 || event.keyCode === 32) this.iniciarJogo(this.opcoesNumeros[this.indiceFoco]);
+        });
+    }
+
+    moverFoco(delta) {
+        const total = this.opcoesNumeros.length;
+        this.indiceFoco = ((this.indiceFoco + delta) % total + total) % total;
+        this.anunciarFoco();
+    }
+
+    anunciarFoco() {
+        this.falar(`${this.opcoesNumeros[this.indiceFoco]} jogadores. Pressione Enter para confirmar.`);
+    }
+
+    iniciarJogo(num) {
+        this.scene.start('Tabuleiro', { numJogadores: num });
     }
 }
 
@@ -59,6 +111,9 @@ class Tabuleiro extends Phaser.Scene {
     preload() { this.load.image('tabuleiroImg', 'tabuleiro.png'); }
     create() {
         const { width, height } = this.scale;
+        this.falar = criarAnunciador();
+        this.reduzMovimento = prefersReducedMotion();
+
         let board = this.add.image(width / 2, height / 2, 'tabuleiroImg');
         const boardScale = Math.min(width / 2481, height / 1754);
         board.setScale(boardScale);
@@ -93,8 +148,45 @@ class Tabuleiro extends Phaser.Scene {
         this.txtOk = this.add.text(0, 180, 'OK!', { fontSize: '65px', fill: '#fff', fontFamily: 'Arial Black' }).setOrigin(0.5);
         this.modal.add([fundoM, this.txtModal, this.btnOkRect, this.txtOk]);
         this.btnOkRect.on('pointerdown', () => this.fecharModal());
+
+        this.cursorFoco = this.add.rectangle(0, 0, 380, 380, 0x000000, 0).setStrokeStyle(8, 0xFFD700).setDepth(250);
+        if (!this.reduzMovimento) {
+            this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
+        }
+
+        this.configurarTeclado();
         this.mostrarInterface(true);
+        this.atualizarFocoDado();
         this.scale.on('resize', () => this.redimensionar());
+
+        this.falar(`Caminhada da Prevenção iniciada, ${this.numJogadores} jogadores. Vez do Jogador 1. Pressione Enter para lançar o dado.`);
+    }
+
+    configurarTeclado() {
+        this.input.keyboard.on('keydown', (event) => {
+            if (event.keyCode !== 13 && event.keyCode !== 32) return;
+            event.preventDefault();
+
+            if (this.popupAberto) {
+                this.fecharModal();
+            } else if (!this.estaMovendo) {
+                this.lancarDado();
+            }
+        });
+    }
+
+    atualizarFocoDado() {
+        this.cursorFoco.setVisible(true);
+        this.cursorFoco.width = 380;
+        this.cursorFoco.height = 380;
+        this.cursorFoco.setPosition(this.btnDado.x, this.btnDado.y);
+    }
+
+    atualizarFocoModal() {
+        this.cursorFoco.setVisible(true);
+        this.cursorFoco.width = this.btnOkRect.width + 30;
+        this.cursorFoco.height = this.btnOkRect.height + 30;
+        this.cursorFoco.setPosition(this.modal.x + this.btnOkRect.x, this.modal.y + this.btnOkRect.y);
     }
 
     redimensionar() {
@@ -106,6 +198,8 @@ class Tabuleiro extends Phaser.Scene {
         this.btnDado.setPosition(width - 200, height - 200);
         this.painelTurno.setPosition(width - 250, 100);
         this.modal.setPosition(width / 2, height / 2);
+        if (this.popupAberto) this.atualizarFocoModal();
+        else this.atualizarFocoDado();
     }
 
     mostrarInterface(exibir) { this.tweens.add({ targets: [this.btnDado, this.painelTurno], alpha: exibir ? 1 : 0, duration: 400 }); }
@@ -122,8 +216,12 @@ class Tabuleiro extends Phaser.Scene {
                 if (++giros > 20) {
                     const final = Phaser.Math.Between(1, 6);
                     this.txtDado.setText(final).setFontSize(180).setFill('#e67e22');
-                    this.tweens.add({ targets: this.btnDado, scale: 1.25, duration: 250, yoyo: true });
-                    this.time.delayedCall(1500, () => { this.mostrarInterface(false); this.moverJogador(this.turno, final); });
+                    this.cursorFoco.setVisible(false);
+                    if (!this.reduzMovimento) {
+                        this.tweens.add({ targets: this.btnDado, scale: 1.25, duration: 250, yoyo: true });
+                    }
+                    this.falar(`Deu ${final} no dado.`);
+                    this.time.delayedCall(this.reduzMovimento ? 200 : 1500, () => { this.mostrarInterface(false); this.moverJogador(this.turno, final); });
                 }
             }
         });
@@ -139,7 +237,7 @@ class Tabuleiro extends Phaser.Scene {
                 const posNorm = COORDENADAS_NORM[j.posicao];
                 const finalX = (posNorm.x * width) + OFFSETS[id].dx;
                 const finalY = (posNorm.y * height) + OFFSETS[id].dy;
-                this.tweens.add({ targets: j.sprite, x: finalX, y: finalY, duration: 400, onComplete: passo });
+                this.tweens.add({ targets: j.sprite, x: finalX, y: finalY, duration: this.reduzMovimento ? 80 : 400, onComplete: passo });
             } else {
                 if (!forcar) this.verificarRegra(id);
                 else this.proximoOuGanhar(id);
@@ -150,16 +248,31 @@ class Tabuleiro extends Phaser.Scene {
     verificarRegra(id) {
         let regra = MAPA_CASAS[this.jogadores[id].posicao];
         if (regra) this.abrirModal(regra);
-        else this.proximoOuGanhar(id);
+        else {
+            this.falar(`Jogador ${id + 1} chegou na casa ${this.jogadores[id].posicao}.`);
+            this.proximoOuGanhar(id);
+        }
     }
     abrirModal(regra) {
         this.popupAberto = true;
         this.txtModal.setText(regra.texto);
         this.currentRegra = regra;
-        this.tweens.add({ targets: this.modal, alpha: 1, scale: 1, duration: 500, ease: 'Back.easeOut' });
+        if (this.reduzMovimento) {
+            this.modal.setAlpha(1).setScale(1);
+        } else {
+            this.tweens.add({ targets: this.modal, alpha: 1, scale: 1, duration: 500, ease: 'Back.easeOut' });
+        }
+        this.atualizarFocoModal();
+        this.falar(regra.texto);
     }
     fecharModal() {
-        this.tweens.add({ targets: this.modal, alpha: 0, scale: 0.5, duration: 250, onComplete: () => { this.popupAberto = false; this.processarEfeitoRegra(this.currentRegra); } });
+        const aoFechar = () => { this.popupAberto = false; this.processarEfeitoRegra(this.currentRegra); };
+        if (this.reduzMovimento) {
+            this.modal.setAlpha(0).setScale(0.5);
+            aoFechar();
+        } else {
+            this.tweens.add({ targets: this.modal, alpha: 0, scale: 0.5, duration: 250, onComplete: aoFechar });
+        }
     }
     processarEfeitoRegra(regra) {
         let j = this.jogadores[this.turno];
@@ -173,7 +286,12 @@ class Tabuleiro extends Phaser.Scene {
         if (regra.irPara !== undefined) this.moverJogador(this.turno, regra.irPara - j.posicao, true);
         else if (regra.efeito) this.moverJogador(this.turno, regra.efeito, true);
         else if (regra.pularRodada) { j.bloqueado = true; this.proximoOuGanhar(this.turno); }
-        else if (regra.jogueNovamente) { this.estaMovendo = false; this.mostrarInterface(true); }
+        else if (regra.jogueNovamente) {
+            this.estaMovendo = false;
+            this.mostrarInterface(true);
+            this.atualizarFocoDado();
+            this.falar(`Jogador ${this.turno + 1} joga novamente. Pressione Enter para lançar o dado.`);
+        }
         else this.proximoOuGanhar(this.turno);
     }
     proximoOuGanhar(id) {
@@ -183,13 +301,18 @@ class Tabuleiro extends Phaser.Scene {
     }
     proximoTurno() {
         this.turno = (this.turno + 1) % this.numJogadores;
-        if (this.jogadores[this.turno].bloqueado) { this.jogadores[this.turno].bloqueado = false; this.proximoTurno(); }
-        else {
+        if (this.jogadores[this.turno].bloqueado) {
+            this.jogadores[this.turno].bloqueado = false;
+            this.falar(`Jogador ${this.turno + 1} fica uma rodada sem jogar.`);
+            this.proximoTurno();
+        } else {
             this.bgTurno.setFillStyle(CORES[this.turno]);
             this.txtTurno.setText(`VEZ: JOGADOR ${this.turno + 1}`);
             this.txtDado.setText('🎲').setFontSize(130).setFill('#000');
             this.estaMovendo = false;
             this.mostrarInterface(true);
+            this.atualizarFocoDado();
+            this.falar(`Vez do Jogador ${this.turno + 1}. Pressione Enter para lançar o dado.`);
         }
     }
 }
