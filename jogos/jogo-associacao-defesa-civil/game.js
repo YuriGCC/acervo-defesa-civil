@@ -3,39 +3,38 @@ const gameLevels = [
         level: 1,
         title: 'Riscos e Atitudes Corretas',
         pairs: [
-            { id: 1, risk: { icon: '🚰', text: 'Bueiro obstruido' }, action: { icon: '🚫', text: 'Não jogar lixo na rua' } },
-            { id: 2, risk: { icon: '🌧️', text: 'Chuva forte' }, action: { icon: '🏠', text: 'Procurar abrigo seguro' } },
-            { id: 3, risk: { icon: '⛰️', text: 'Barranco sem vegetação' }, action: { icon: '🌳', text: 'Plantar árvores e proteger o solo' } },
-            { id: 4, risk: { icon: '⚡', text: 'Fio elétrico caído' }, action: { icon: '👨', text: 'Avisar um adulto ou autoridades responsáveis' } },
-            { id: 5, risk: { icon: '🌲', text: 'Árvore com risco de queda' }, action: { icon: '📞', text: 'Comunicar a Defesa Civil ou a prefeitura' } },
-            { id: 6, risk: { icon: '🗑️', text: 'Terreno com descarte de lixo' }, action: { icon: '🧹', text: 'Manter o terreno limpo' } }
+            { id: 1, risk: { icon: '🚱', text: 'Bueiro entupido de lixo causa alagamento' }, action: { icon: '🚮', text: 'Não jogar lixo na rua ou na calçada' } },
+            { id: 2, risk: { icon: '⛈️', text: 'Chuva muito forte com raios e ventos' }, action: { icon: '🏠', text: 'Entre em um lugar seguro e fique longe de janelas' } },
+            { id: 3, risk: { icon: '⛰️', text: 'Barranco sem plantas pode desmoronar' }, action: { icon: '🌱', text: 'Plante árvores para segurar a terra no barranco' } },
+            { id: 4, risk: { icon: '⚡', text: 'Fio elétrico caído no chão ou na rua' }, action: { icon: '⚠️📢', text: 'Não toque! Avise um adulto ou ligue para a prefeitura' } },
+            { id: 5, risk: { icon: '🌲', text: 'Árvore torta ou podre perto de casas' }, action: { icon: '📞', text: 'Avise a Defesa Civil — não tente cortar sozinho' } },
+            { id: 6, risk: { icon: '🚯', text: 'Lixo em terrenos cria focos de doenças e obstrui o rio' }, action: { icon: '🧹🚮♻️', text: 'Descarte o lixo corretamente' } },
         ]
     },
     {
         level: 2,
         title: 'Sinais de Risco',
         pairs: [
-            { id: 7, risk: { icon: '🗑️', text: 'Lixo no rio' }, action: { icon: '🌊', text: 'Pode causar enchentes' } },
-            { id: 8, risk: { icon: '🏚️', text: 'Casa construída em encosta íngreme' }, action: { icon: '⛰️', text: 'Pode provocar deslizamentos' } },
-            { id: 9, risk: { icon: '⚡', text: 'Fiação elétrica exposta' }, action: { icon: '⚠️', text: 'Risco de choque elétrico' } },
-            { id: 10, risk: { icon: '🚰', text: 'Bueiro entupido' }, action: { icon: '💧', text: 'Pode causar alagamentos' } },
-            { id: 11, risk: { icon: '🌳', text: 'Árvore muito inclinada' }, action: { icon: '💨', text: 'Pode cair com vento ou chuva' } },
-            { id: 12, risk: { icon: '🪨', text: 'Barranco com rachaduras' }, action: { icon: '🏔️', text: 'Sinal de possível deslizamento de terra' } }
+            { id: 7, risk: { icon: '🗑️', text: 'Lixo no rio bloqueia a passagem da água' }, action: { icon: '🌊', text: 'A água transborda e provoca enchente na rua' } },
+            { id: 8, risk: { icon: '🏚️', text: 'Casa construída no alto de um barranco' }, action: { icon: '⛰️', text: 'A terra pode escorregar e causar deslizamento' } },
+            { id: 9, risk: { icon: '⚡', text: 'Fio elétrico sem proteção ou com a capa rasgada' }, action: { icon: '⚠️', text: 'Pode dar choque elétrico em quem tocar' } },
+            { id: 10, risk: { icon: '🚰', text: 'Bueiro entupido não deixa a água escoar' }, action: { icon: '💧', text: 'Pode causar alagamento na rua' } },
+            { id: 11, risk: { icon: '🌳', text: 'Árvore muito inclinada com raízes soltas' }, action: { icon: '💨', text: 'Pode tombar com vento forte e machucar alguém' } },
+            { id: 12, risk: { icon: '🪨', text: 'Barranco com fendas e rachaduras no solo' }, action: { icon: '🏔️', text: 'A terra está se soltando — risco de desmoronamento' } },
         ]
     },
     {
         level: 3,
         title: 'Elementos da Defesa Civil',
         pairs: [
-            { id: 13, risk: { icon: '🚨', text: 'Mensagem de alerta' }, action: { icon: '⚠️', text: 'Avisar sobre perigo ou emergência' } },
-            { id: 14, risk: { icon: '👮', text: 'Agente da Defesa Civil' }, action: { icon: '🛡️', text: 'Ajudar e proteger a população' } },
-            { id: 15, risk: { icon: '🏢', text: 'Abrigo seguro' }, action: { icon: '🏠', text: 'Local seguro para se proteger' } },
-            { id: 16, risk: { icon: '🗺️', text: 'Mapa de risco' }, action: { icon: '📍', text: 'Mostrar áreas com risco de desastre' } },
-            { id: 17, risk: { icon: '💻', text: 'Site da proteção e defesa civil' }, action: { icon: 'ℹ️', text: 'Fornecer informação confiável à população' } }
+            { id: 13, risk: { icon: '🚨📲', text: 'Alerta da Defesa Civil no celular ou rádio' }, action: { icon: '⚠️', text: 'Indica que há perigo próximo — siga as instruções!' } },
+            { id: 14, risk: { icon: '👮', text: 'Agente da Defesa Civil no campo' }, action: { icon: '🛡️📣', text: 'Orienta famílias a sair de áreas de risco com segurança' } },
+            { id: 15, risk: { icon: '🏢', text: 'Escola ou ginásio usado como abrigo' }, action: { icon: '🏠', text: 'Local onde famílias ficam protegidas durante desastres' } },
+            { id: 16, risk: { icon: '🗺️', text: 'Mapa de risco da cidade' }, action: { icon: '📍', text: 'Marca os locais onde há maior perigo de enchente ou deslizamento' } },
+            { id: 17, risk: { icon: '💻', text: 'Site oficial da Defesa Civil' }, action: { icon: ' 🌐ℹ️', text: 'Onde buscar avisos, mapas e orientações em caso de emergência' } },
         ]
     }
 ];
-
 let currentLevel = 0, score = 0, matchedPairs = 0, draggedCard = null, connections = [];
 let currentTouchPos = null;
 let selectedCard = null;
@@ -238,6 +237,8 @@ function handleCorrectMatch(risk, action) {
     risk.classList.add('matched'); action.classList.add('matched');
     risk.setAttribute('tabindex', '-1'); action.setAttribute('tabindex', '-1');
     risk.setAttribute('aria-disabled', 'true'); action.setAttribute('aria-disabled', 'true');
+    risk.setAttribute('aria-pressed', 'true');
+    action.setAttribute('aria-pressed', 'true');
     connections.push({ riskId: risk.dataset.pairId, actionId: action.dataset.pairId });
     score += 10; matchedPairs++;
     updateScore();
@@ -257,7 +258,10 @@ function handleCorrectMatch(risk, action) {
 function handleIncorrectMatch(risk) {
     soundError.play().catch(() => { });
     risk.classList.add('shake');
-    setTimeout(() => risk.classList.remove('shake'), 500);
+    setTimeout(() => {
+        risk.classList.remove('shake');
+        risk.setAttribute('aria-pressed', 'false');
+    }, 500);
     showFeedback('❌ Tente novamente', 'incorrect');
 }
 

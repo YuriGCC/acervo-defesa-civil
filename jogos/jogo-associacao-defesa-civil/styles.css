@@ -262,7 +262,7 @@ body {
 }
 
 .card-text {
-    font-size: clamp(0.6rem, 1.4vh, 0.95rem);
+    font-size: clamp(0.875rem, 1.4vh, 1.1rem);
     color: #333;
     font-weight: bold;
     line-height: 1.2;
@@ -368,11 +368,17 @@ body {
     .game-header { min-height: 2.5rem; }
     .card { min-height: 2.5rem; }
     .card-icon { font-size: 1rem; }
-    .instruction { display: none; }
+}
+
+/* Small screens in portrait mode - stack columns vertically */
+@media (max-width: 480px) {
+    .game-board {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Telas muito pequenas em portrait */
 @media (max-width: 360px) {
     .game-header h1 { font-size: 0.7rem; padding: 0 4rem; }
-    .card-text { font-size: 0.6rem; }
+    .card-text { font-size: clamp(0.875rem, 1.4vh, 1rem); }
 }
