@@ -80,12 +80,17 @@ function voltarAoMenu() {
                 if (cenaMenu && cenaMenu.cameras && cenaMenu.cameras.main) {
                     // Remove o escuro da tela gradualmente
                     cenaMenu.cameras.main.fadeIn(500, 0, 0, 0);
-                    
+
                     // Reativa o controle por teclado que havia sido desligado
                     if (typeof cenaMenu._registrarNavegacaoTeclado === 'function') {
                         cenaMenu._registrarNavegacaoTeclado();
                     }
                 }
+
+                // Devolve o foco ao canvas do menu: sem isso o toque também fica quebrado no menu,
+                // porque o foco continua no botão "Voltar ao Menu" que acabou de ser escondido.
+                const canvasMenu = containerMenu ? containerMenu.querySelector('canvas') : null;
+                if (canvasMenu) canvasMenu.focus();
 
                 console.log('[voltarAoMenu] MenuCena retomada com sucesso');
             } catch (e) {
@@ -175,13 +180,15 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
 
     const onIframeLoad = () => {
 
-        
+
         console.log('[TROCAR_JOGO] Iframe carregado:', dados.nome);
-        
+
         if (btnVoltar) {
             btnVoltar.style.display = 'block';
-            btnVoltar.focus();
         }
+        // Foca o iframe (não o botão) para que toque e teclado funcionem dentro do jogo.
+        // Focar um elemento fora do iframe impede o navegador de repassar toques ao conteúdo do jogo.
+        iframe.focus();
         anunciar(`Jogo "${dados.nome}" iniciado. Use o botão Voltar ao Menu para retornar.`);
     };
 
