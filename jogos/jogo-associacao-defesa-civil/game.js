@@ -320,7 +320,14 @@ function showFeedback(msg, type) {
 }
 
 function updateScore() { scoreElement.textContent = score; }
-function showCompletion() { gameScreen.classList.add('hidden'); completionScreen.classList.remove('hidden'); document.getElementById('finalScore').textContent = score; }
+function showCompletion() {
+    gameScreen.classList.add('hidden');
+    completionScreen.classList.remove('hidden');
+    document.getElementById('finalScore').textContent = score;
+    if (window.parent && window.parent.ponte) {
+        window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'jogo-associacao-defesa-civil' });
+    }
+}
 function shuffleArray(arr) { return arr.sort(() => Math.random() - 0.5); }
 /**
  * Limpa recursos quando o jogo é encerrado.

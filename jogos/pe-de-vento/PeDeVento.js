@@ -322,6 +322,11 @@ export default class PeDeVento extends Phaser.Scene {
         this.btnPausar.setVisible(false);
         this.overlayPausa.setVisible(false);
 
+        // Conta como concluído ao chegar no fim, seja vitória ou derrota.
+        if (window.parent && window.parent.ponte) {
+            window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'pe-de-vento' });
+        }
+
         const { width, height } = this.scale;
         this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85).setDepth(100);
 

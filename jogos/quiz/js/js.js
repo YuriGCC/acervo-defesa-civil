@@ -134,6 +134,10 @@ function enviar(){
             questao.innerText = "Que pena! Você acertou " + pontos + "/" + perguntas.length;
         }
 
+        if (window.parent && window.parent.ponte) {
+            window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'quiz' });
+        }
+
         return;
 
     }

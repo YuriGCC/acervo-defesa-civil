@@ -340,7 +340,11 @@ export default class ArrastaSolta extends Phaser.Scene {
 
     mostrarParabensFinal() {
         const { width, height } = this.scale;
-        
+
+        if (window.parent && window.parent.ponte) {
+            window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'arrasta-solta' });
+        }
+
         const overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.6).setDepth(150);
         
         const txtParabens = this.add.text(width / 2, height / 2 - 50, 'PARABÉNS!\nVOCÊ CONCLUIU O TREINAMENTO!', {

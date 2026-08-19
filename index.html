@@ -103,6 +103,101 @@
             background: rgba(255, 255, 255, 0.2);
             outline: 3px solid #FFD700;
         }
+
+        #btn-resetar-progresso {
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+            z-index: 50;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+
+        #btn-resetar-progresso:hover,
+        #btn-resetar-progresso:focus-visible {
+            background: rgba(255, 255, 255, 0.2);
+            outline: 3px solid #FFD700;
+        }
+
+        #tela-certificado {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #tela-certificado .certificado-cartao {
+            background: #fff;
+            color: #222;
+            border-radius: 16px;
+            padding: clamp(20px, 4vw, 48px);
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 6px solid #FFD700;
+        }
+
+        #tela-certificado h2 {
+            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            margin: 0 0 12px;
+            color: #1e6b3c;
+        }
+
+        #tela-certificado p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            line-height: 1.4;
+            margin: 0 0 24px;
+        }
+
+        #tela-certificado .certificado-botoes {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        #tela-certificado button {
+            min-height: 48px;
+            padding: 12px 22px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+
+        #btn-jogar-de-novo {
+            background: #27ae60;
+            color: #fff;
+        }
+
+        #btn-continuar-certificado {
+            background: #e0e0e0;
+            color: #222;
+        }
+
+        #tela-certificado button:focus-visible {
+            outline: 3px solid #FFD700;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 
@@ -110,7 +205,9 @@
 
     <div
         id="container-menu"
-    ></div>
+    >
+        <button id="btn-resetar-progresso" aria-label="Reiniciar progresso dos jogos" title="Reiniciar progresso">⟳</button>
+    </div>
 
     <div
         id="container-jogo"
@@ -122,9 +219,21 @@
         ← Voltar ao Menu
     </button>
 
+    <div id="tela-certificado" role="dialog" aria-modal="true" aria-labelledby="certificado-titulo">
+        <div class="certificado-cartao">
+            <h2 id="certificado-titulo">🏆 Certificado de Agente Mirim</h2>
+            <p>Parabéns! Você completou todos os jogos do Acervo da Defesa Civil e agora é um Agente Mirim da prevenção!</p>
+            <div class="certificado-botoes">
+                <button id="btn-jogar-de-novo">Jogar de novo</button>
+                <button id="btn-continuar-certificado">Continuar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="aria-announcer" aria-live="assertive" aria-atomic="true"></div>
 
     <script src="config-jogos.js"></script>
+    <script src="progresso.js"></script>
     <script src="evento-ponte.js"></script>
     <script src="phaser.min.js"></script>
     <script src="menu.js"></script>

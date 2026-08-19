@@ -279,6 +279,7 @@ class Tabuleiro extends Phaser.Scene {
         if (regra.ganhar) {
             this.game.destroy(true, false);
             if (window.parent && window.parent.ponte) {
+                window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'caminhada-prevencao' });
                 window.parent.ponte.emitir('VOLTAR_MENU');
             }
             return;

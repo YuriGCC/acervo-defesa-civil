@@ -39,6 +39,26 @@ function anunciar(msg) {
 }
 
 /**
+ * Exibe a tela de certificado (todos os jogos concluídos) e foca o primeiro botão.
+ */
+function mostrarCertificado() {
+    const el = document.getElementById('tela-certificado');
+    if (!el) return;
+    el.style.display = 'flex';
+    anunciar('Parabéns! Você completou todos os jogos e ganhou o certificado de Agente Mirim.');
+    const btn = document.getElementById('btn-jogar-de-novo');
+    if (btn) btn.focus();
+}
+
+/**
+ * Esconde a tela de certificado.
+ */
+function esconderCertificado() {
+    const el = document.getElementById('tela-certificado');
+    if (el) el.style.display = 'none';
+}
+
+/**
  * Volta ao menu: Destrói o iframe, retoma a cena do Menu e limpa recursos.
  * @description Disparado pelos jogos via 'window.parent.ponte'.
  */
@@ -71,23 +91,29 @@ function voltarAoMenu() {
 
                 game.scene.resume('MenuCena');
                 game.scene.bringToTop('MenuCena');
-                
+
                 // CORREÇÃO: Buscamos a cena exata para acessar a câmera DELA
                 const cenaMenu = game.scene.getScene('MenuCena');
                 if (cenaMenu && cenaMenu.cameras && cenaMenu.cameras.main) {
+                    // Reconstrói os cards do menu (só se já passou da tela de apresentação):
+                    // isso atualiza os selos de "concluído" e já reativa a navegação por teclado.
+                    if (cenaMenu.botoesGrupo && typeof cenaMenu.renderizarInterfaceMenu === 'function') {
+                        cenaMenu.renderizarInterfaceMenu();
+                    }
+
                     // Remove o escuro da tela gradualmente
                     cenaMenu.cameras.main.fadeIn(500, 0, 0, 0);
-
-                    // Reativa o controle por teclado que havia sido desligado
-                    if (typeof cenaMenu._registrarNavegacaoTeclado === 'function') {
-                        cenaMenu._registrarNavegacaoTeclado();
-                    }
                 }
 
-                // Devolve o foco ao canvas do menu: sem isso o toque também fica quebrado no menu,
-                // porque o foco continua no botão "Voltar ao Menu" que acabou de ser escondido.
-                const canvasMenu = containerMenu ? containerMenu.querySelector('canvas') : null;
-                if (canvasMenu) canvasMenu.focus();
+                if (typeof progressoCompleto === 'function' && progressoCompleto()) {
+                    mostrarCertificado();
+                } else {
+                    // Devolve o foco ao canvas do menu: sem isso o toque também fica quebrado no
+                    // menu, porque o foco continua no botão "Voltar ao Menu" que acabou de ser
+                    // escondido.
+                    const canvasMenu = containerMenu ? containerMenu.querySelector('canvas') : null;
+                    if (canvasMenu) canvasMenu.focus();
+                }
             } catch (e) {
                 console.error('[voltarAoMenu] Erro ao retomar MenuCena:', e);
             }
@@ -202,3 +228,70 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
  * Destrói o iframe para liberar RAM e retoma a cena do Menu Principal.
  */
 window.ponte.quando('VOLTAR_MENU', () => {voltarAoMenu();});
+
+/**
+ * Listener: JOGO_CONCLUIDO
+ * @description Disparado por um jogo ao chegar na tela final (independente da pontuação).
+ * Só grava o progresso; os selos no menu e a checagem do certificado acontecem
+ * quando o jogador volta para o menu (voltarAoMenu), que é quando a cena do menu
+ * está de fato visível para atualizar.
+ * @param {Object} dados - { id: string }
+ */
+window.ponte.quando('JOGO_CONCLUIDO', (dados) => {
+    if (!dados || !dados.id) return;
+    marcarJogoConcluido(dados.id);
+});
+
+/**
+ * Botão discreto de reiniciar progresso, com confirmação (a tela é compartilhada
+ * por várias crianças, então resetar sem querer não pode ser fácil).
+ */
+const btnResetarProgresso = document.getElementById('btn-resetar-progresso');
+if (btnResetarProgresso) {
+    btnResetarProgresso.addEventListener('click', () => {
+        const confirmado = window.confirm(
+            'Isso vai apagar o progresso de todos os jogos concluídos nesta tela. Deseja continuar?'
+        );
+        if (!confirmado) return;
+
+        resetarProgresso();
+
+        const cenaMenu = game.scene.getScene('MenuCena');
+        if (cenaMenu && cenaMenu.botoesGrupo && typeof cenaMenu.renderizarInterfaceMenu === 'function') {
+            cenaMenu.renderizarInterfaceMenu();
+        }
+
+        anunciar('Progresso reiniciado.');
+    });
+}
+
+/**
+ * Botões da tela de certificado.
+ */
+const btnJogarDeNovo = document.getElementById('btn-jogar-de-novo');
+if (btnJogarDeNovo) {
+    btnJogarDeNovo.addEventListener('click', () => {
+        resetarProgresso();
+        esconderCertificado();
+
+        const cenaMenu = game.scene.getScene('MenuCena');
+        if (cenaMenu && cenaMenu.botoesGrupo && typeof cenaMenu.renderizarInterfaceMenu === 'function') {
+            cenaMenu.renderizarInterfaceMenu();
+        }
+
+        const canvasMenu = document.querySelector('#container-menu canvas');
+        if (canvasMenu) canvasMenu.focus();
+
+        anunciar('Progresso reiniciado. Escolha um jogo para começar.');
+    });
+}
+
+const btnContinuarCertificado = document.getElementById('btn-continuar-certificado');
+if (btnContinuarCertificado) {
+    btnContinuarCertificado.addEventListener('click', () => {
+        esconderCertificado();
+        const canvasMenu = document.querySelector('#container-menu canvas');
+        if (canvasMenu) canvasMenu.focus();
+        anunciar('Menu de jogos.');
+    });
+}

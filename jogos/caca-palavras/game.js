@@ -492,4 +492,7 @@ function mostrarConclusao() {
     document.getElementById('completionScreen').classList.remove('hidden');
     anunciar('Parabéns! Você encontrou todas as palavras. Pressione o botão Jogar Novamente para recomeçar.');
     document.getElementById('btnRestart').focus();
+    if (window.parent && window.parent.ponte) {
+        window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'caca-palavras' });
+    }
 }

@@ -358,7 +358,11 @@ export default class SepararLixo extends Phaser.Scene {
     ganharJogo() {
         if (this.spawnTimer) this.spawnTimer.remove();
         const { width, height } = this.scale;
-        
+
+        if (window.parent && window.parent.ponte) {
+            window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'separar-lixo' });
+        }
+
         this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.85).setDepth(1000);
         this.add.text(width / 2, height / 2 - 50, 'MUITO BEM!', { 
             fontSize: '110px', fill: '#00ff00', fontFamily: 'Arial Black' 

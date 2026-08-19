@@ -238,6 +238,22 @@ class Menu extends Phaser.Scene {
             container.add(icone);
         }
 
+        // Selo de "concluído": aparece se este jogo já foi jogado até o fim nesta tela.
+        const concluido = typeof obterProgresso === 'function' && obterProgresso().includes(jogo.id);
+        if (concluido) {
+            const seloRaio = alturaBotao * 0.11;
+            const seloX = larguraBotao / 2 - seloRaio - 8;
+            const seloY = -alturaBotao / 2 + seloRaio + 8;
+            const seloFundo = this.add.circle(seloX, seloY, seloRaio, 0x27ae60, 1)
+                .setStrokeStyle(3, 0xffffff);
+            const seloTexto = this.add.text(seloX, seloY, '✓', {
+                fontSize: `${Math.round(seloRaio * 1.3)}px`,
+                fontFamily: 'Arial Black',
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+            container.add([seloFundo, seloTexto]);
+        }
+
         // Ações de ponteiro (mouse e touch via pointerdown)
         let acionado = false;
 
@@ -280,7 +296,7 @@ class Menu extends Phaser.Scene {
             focar: () => {
                 fundo.setStrokeStyle(8, 0xFFD700, 1);
                 container.setScale(1.04);
-                this._anunciar(`${jogo.nome}. Pressione Enter para jogar.`);
+                this._anunciar(`${jogo.nome}${concluido ? ', concluído' : ''}. Pressione Enter para jogar.`);
             },
             desfocar: () => {
                 fundo.setStrokeStyle(4, 0xffffff, 0.8);

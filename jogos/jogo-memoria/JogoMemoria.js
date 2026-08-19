@@ -229,6 +229,11 @@ export default class JogoMemoria extends Phaser.Scene {
     finalizar() {
         const { width, height } = this.scale;
         this.estado = 'FIM';
+
+        if (window.parent && window.parent.ponte) {
+            window.parent.ponte.emitir('JOGO_CONCLUIDO', { id: 'jogo-memoria' });
+        }
+
         this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85).setDepth(100);
 
         this.add.text(width / 2, height / 2 - 50, 'MUITO BEM!', {
