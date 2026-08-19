@@ -43,8 +43,6 @@ function anunciar(msg) {
  * @description Disparado pelos jogos via 'window.parent.ponte'.
  */
 function voltarAoMenu() {
-    console.log('[voltarAoMenu] Iniciando retorno ao menu...');
-    
     const containerJogo = document.getElementById('container-jogo');
     const containerMenu = document.getElementById('container-menu');
     const btnVoltar = document.getElementById('btn-voltar-menu');
@@ -52,8 +50,9 @@ function voltarAoMenu() {
     // Devolve o display do menu para que ele tenha largura/altura reais
     if (containerMenu && containerJogo) {
         // Traz o menu de volta usando visibility
-        containerMenu.style.visibility = 'visible'; 
+        containerMenu.style.visibility = 'visible';
         containerJogo.style.display = 'none';
+        containerJogo.style.pointerEvents = 'none';
     }
 
     // Oculta botão de volta
@@ -65,8 +64,6 @@ function voltarAoMenu() {
     setTimeout(() => {
         if (game && game.scene) {
             try {
-                console.log('[voltarAoMenu] Retomando MenuCena...');
-                
                 // Força o gerenciador de escala do Phaser a reconhecer o novo tamanho
                 if (game.scale) {
                     game.scale.refresh();
@@ -91,8 +88,6 @@ function voltarAoMenu() {
                 // porque o foco continua no botão "Voltar ao Menu" que acabou de ser escondido.
                 const canvasMenu = containerMenu ? containerMenu.querySelector('canvas') : null;
                 if (canvasMenu) canvasMenu.focus();
-
-                console.log('[voltarAoMenu] MenuCena retomada com sucesso');
             } catch (e) {
                 console.error('[voltarAoMenu] Erro ao retomar MenuCena:', e);
             }
@@ -118,9 +113,7 @@ function voltarAoMenu() {
                 }, 100);
             }
         }
-
-        console.log('[voltarAoMenu] Retorno ao menu concluído');
-    }, 50); 
+    }, 50);
 
     anunciar('Retornado ao menu principal.');
 }
@@ -132,8 +125,6 @@ function voltarAoMenu() {
  */
 window.ponte.quando('TROCAR_JOGO', (dados) => {
     if (!dados || !dados.caminho) return;
-
-    console.log('[TROCAR_JOGO] Iniciando jogo:', dados.nome);
 
     const containerJogo = document.getElementById('container-jogo');
     const containerMenu = document.getElementById('container-menu');
@@ -160,6 +151,10 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
     containerJogo.style.display = 'block';
     containerJogo.style.visibility = 'visible';
     containerJogo.style.zIndex = '999'; // Garante que fique acima de tudo
+    // O CSS define pointer-events: none em #container-jogo por padrão (para não capturar
+    // toques enquanto o jogo está escondido atrás do menu). Sem isso, nada dentro do jogo
+    // responde a toque/clique mesmo com o container visível.
+    containerJogo.style.pointerEvents = 'auto';
     containerJogo.innerHTML = '';
 
     // Força o navegador a calcular os estilos recém-aplicados
@@ -179,16 +174,19 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
 
 
     const onIframeLoad = () => {
-
-
-        console.log('[TROCAR_JOGO] Iframe carregado:', dados.nome);
-
         if (btnVoltar) {
             btnVoltar.style.display = 'block';
         }
         // Foca o iframe (não o botão) para que toque e teclado funcionem dentro do jogo.
         // Focar um elemento fora do iframe impede o navegador de repassar toques ao conteúdo do jogo.
+        // Em alguns navegadores mobile, focar só o elemento <iframe> não é suficiente: é preciso
+        // também focar a window de dentro do iframe para que ela vire o contexto realmente ativo.
         iframe.focus();
+        try {
+            if (iframe.contentWindow) iframe.contentWindow.focus();
+        } catch (e) {
+            console.warn('[TROCAR_JOGO] Não foi possível focar a window do iframe:', e);
+        }
         anunciar(`Jogo "${dados.nome}" iniciado. Use o botão Voltar ao Menu para retornar.`);
     };
 

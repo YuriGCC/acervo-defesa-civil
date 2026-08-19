@@ -217,7 +217,6 @@ function verificar(){
 
 function finalizarJogo() {
     if (window.parent && window.parent.ponte) {
-        console.log('[finalizarJogo] Emissão do evento VOLTAR_MENU para a ponte de eventos');
         window.parent.ponte.emitir('VOLTAR_MENU');
     }
 }
