@@ -23,7 +23,7 @@ const PALAVRAS = [
     { palavra: 'VENDAVAL',   dica: '💨 Vento forte e repentino capaz de derrubar árvores e estruturas.' },
 ];
 const GRID_SIZE = 14;
-const NUM_PALAVRAS = 8;
+const NUM_PALAVRAS = 10;
 
 let grid = [];
 let palavrasSelecionadas = [];
