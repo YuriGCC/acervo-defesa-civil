@@ -148,6 +148,10 @@ function toggleSelectCard(card) {
     checkMatch(risk, action);
 }
 
+// Marca se o arraste realmente moveu (evita dar feedback de "errado" num simples toque/clique
+// sem arrastar, e é usado para decidir se um solto fora de um alvo válido conta como erro).
+let dragMoved = false;
+
 function setupInteraction(card) {
     card.draggable = true;
 
@@ -162,24 +166,11 @@ function setupInteraction(card) {
     card.addEventListener('dragstart', (e) => {
         if (card.classList.contains('matched')) return;
         draggedCard = card;
+        dragMoved = false;
         card.classList.add('dragging');
         const img = new Image();
         img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         e.dataTransfer.setDragImage(img, 0, 0);
-    });
-
-    document.addEventListener('dragover', (e) => {
-        if (!draggedCard) return;
-        e.preventDefault();
-        const boardRect = canvas.getBoundingClientRect();
-        currentTouchPos = { x: e.clientX - boardRect.left, y: e.clientY - boardRect.top };
-
-        // Highlight Drop Zone
-        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.card.action');
-        document.querySelectorAll('.card.action').forEach(c => c.classList.remove('drop-zone'));
-        if (target && !target.classList.contains('matched')) target.classList.add('drop-zone');
-
-        drawConnections();
     });
 
     card.addEventListener('dragend', () => {
@@ -193,37 +184,75 @@ function setupInteraction(card) {
     card.addEventListener('touchstart', (e) => {
         if (card.classList.contains('matched')) return;
         draggedCard = card;
+        dragMoved = false;
         card.classList.add('dragging');
     });
-
-    document.addEventListener('touchmove', (e) => {
-        if (!draggedCard) return;
-        const touch = e.touches[0];
-        const boardRect = canvas.getBoundingClientRect();
-        currentTouchPos = { x: touch.clientX - boardRect.left, y: touch.clientY - boardRect.top };
-
-        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.card.action');
-        document.querySelectorAll('.card.action').forEach(c => c.classList.remove('drop-zone'));
-        if (target && !target.classList.contains('matched')) target.classList.add('drop-zone');
-
-        drawConnections();
-    }, { passive: false });
-
-    document.addEventListener('touchend', (e) => {
-        if (!draggedCard) return;
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.card.action');
-
-        if (target && !target.classList.contains('matched')) {
-            checkMatch(draggedCard, target);
-        }
-        draggedCard.classList.remove('dragging');
-        draggedCard = null;
-        currentTouchPos = null;
-        document.querySelectorAll('.card.action').forEach(c => c.classList.remove('drop-zone'));
-        drawConnections();
-    });
 }
+
+// Registrados uma única vez (não por card) para não empilhar listeners duplicados a
+// cada nível carregado — antes isso acontecia dentro de setupInteraction().
+document.addEventListener('dragover', (e) => {
+    if (!draggedCard) return;
+    e.preventDefault();
+    dragMoved = true;
+    const boardRect = canvas.getBoundingClientRect();
+    currentTouchPos = { x: e.clientX - boardRect.left, y: e.clientY - boardRect.top };
+
+    // Highlight Drop Zone
+    const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.card.action');
+    document.querySelectorAll('.card.action').forEach(c => c.classList.remove('drop-zone'));
+    if (target && !target.classList.contains('matched')) target.classList.add('drop-zone');
+
+    drawConnections();
+});
+
+// Sem isso, soltar o mouse nunca verificava acerto/erro (faltava o listener de 'drop').
+document.addEventListener('drop', (e) => {
+    if (!draggedCard) return;
+    e.preventDefault();
+    const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.card.action');
+
+    if (target && !target.classList.contains('matched')) {
+        checkMatch(draggedCard, target);
+    } else if (dragMoved) {
+        // Soltou fora de qualquer card de ação válido: conta como tentativa errada,
+        // em vez de não dar nenhum feedback pra criança.
+        handleIncorrectMatch(draggedCard);
+    }
+});
+
+document.addEventListener('touchmove', (e) => {
+    if (!draggedCard) return;
+    dragMoved = true;
+    const touch = e.touches[0];
+    const boardRect = canvas.getBoundingClientRect();
+    currentTouchPos = { x: touch.clientX - boardRect.left, y: touch.clientY - boardRect.top };
+
+    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.card.action');
+    document.querySelectorAll('.card.action').forEach(c => c.classList.remove('drop-zone'));
+    if (target && !target.classList.contains('matched')) target.classList.add('drop-zone');
+
+    drawConnections();
+}, { passive: false });
+
+document.addEventListener('touchend', (e) => {
+    if (!draggedCard) return;
+    const touch = e.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.card.action');
+
+    if (target && !target.classList.contains('matched')) {
+        checkMatch(draggedCard, target);
+    } else if (dragMoved) {
+        // Soltou o dedo fora de qualquer card de ação válido: conta como tentativa errada,
+        // em vez de não dar nenhum feedback pra criança (o bug relatado no nível 1).
+        handleIncorrectMatch(draggedCard);
+    }
+    draggedCard.classList.remove('dragging');
+    draggedCard = null;
+    currentTouchPos = null;
+    document.querySelectorAll('.card.action').forEach(c => c.classList.remove('drop-zone'));
+    drawConnections();
+});
 
 function checkMatch(risk, action) {
     if (risk.dataset.pairId === action.dataset.pairId) {
