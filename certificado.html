@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/icone-uniasselvi.png" type="image/x-icon">
+    <title>Certificado de Agente Mirim</title>
+    <link rel="stylesheet" href="assets/certificado.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: clamp(12px, 4vw, 32px);
+        }
+
+        .pagina-certificado {
+            background: #fff;
+            border-radius: 16px;
+            padding: clamp(16px, 4vw, 32px);
+            max-width: 760px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .pagina-certificado h1 {
+            font-size: clamp(1.2rem, 4vw, 1.7rem);
+            color: #1e6b3c;
+            margin: 0 0 6px;
+        }
+
+        .pagina-certificado > p {
+            font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+            color: #444;
+            margin: 0 0 20px;
+        }
+
+        #certificado-conteudo {
+            margin: 0 0 22px;
+        }
+
+        #btn-baixar-pdf {
+            min-height: 52px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            background: #27ae60;
+            color: #fff;
+            font-size: clamp(1rem, 2.8vw, 1.2rem);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #btn-baixar-pdf:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        #btn-baixar-pdf:focus-visible {
+            outline: 3px solid #FFD700;
+            outline-offset: 3px;
+        }
+
+        #mensagem-status {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #666;
+            min-height: 1.2em;
+        }
+
+        .aviso-sem-nome {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: #444;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="pagina-certificado">
+        <div id="area-com-nome">
+            <h1>🏆 Seu certificado de Agente Mirim</h1>
+            <p>Confira abaixo e toque no botão para baixar em PDF.</p>
+            <div id="certificado-conteudo" class="certificado-papel"></div>
+            <button id="btn-baixar-pdf">Baixar certificado em PDF</button>
+            <p id="mensagem-status" role="status" aria-live="polite"></p>
+        </div>
+        <div id="area-sem-nome" class="aviso-sem-nome" style="display:none;">
+            <h1>🏆 Certificado de Agente Mirim</h1>
+            <p>Este link é gerado a partir do QR code exibido depois que uma criança completa todos os
+                jogos do Acervo Educativo da Defesa Civil. Volte até a tela do certificado e escaneie o
+                QR code novamente para ver o certificado com o nome preenchido.</p>
+        </div>
+    </main>
+
+    <script src="assets/lib/html2canvas.min.js"></script>
+    <script src="assets/lib/jspdf.umd.min.js"></script>
+    <script src="assets/certificado.js"></script>
+    <script>
+        (function () {
+            const parametros = new URLSearchParams(window.location.search);
+            const nome = (parametros.get('nome') || '').trim();
+            const dataTexto = (parametros.get('data') || '').trim();
+
+            const areaComNome = document.getElementById('area-com-nome');
+            const areaSemNome = document.getElementById('area-sem-nome');
+
+            if (!nome) {
+                areaComNome.style.display = 'none';
+                areaSemNome.style.display = 'block';
+                return;
+            }
+
+            document.getElementById('certificado-conteudo').innerHTML =
+                montarCertificadoHTML(nome, dataTexto);
+
+            const btnBaixar = document.getElementById('btn-baixar-pdf');
+            const mensagemStatus = document.getElementById('mensagem-status');
+
+            btnBaixar.addEventListener('click', async () => {
+                btnBaixar.disabled = true;
+                mensagemStatus.textContent = 'Gerando PDF...';
+                try {
+                    const alvo = document.getElementById('certificado-conteudo');
+                    const canvas = await html2canvas(alvo, { scale: 2, backgroundColor: '#faf6ea' });
+                    const imagem = canvas.toDataURL('image/png');
+
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const larguraPagina = pdf.internal.pageSize.getWidth();
+                    const alturaPagina = pdf.internal.pageSize.getHeight();
+                    const margem = 15;
+                    const larguraDisponivel = larguraPagina - margem * 2;
+                    const alturaImagem = (canvas.height * larguraDisponivel) / canvas.width;
+                    const alturaFinal = Math.min(alturaImagem, alturaPagina - margem * 2);
+                    const larguraFinal = (canvas.width * alturaFinal) / canvas.height;
+                    const x = (larguraPagina - larguraFinal) / 2;
+                    const y = (alturaPagina - alturaFinal) / 2;
+
+                    pdf.addImage(imagem, 'PNG', x, y, larguraFinal, alturaFinal);
+
+                    const nomeArquivo = 'certificado-agente-mirim-' +
+                        nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') +
+                        '.pdf';
+                    pdf.save(nomeArquivo || 'certificado-agente-mirim.pdf');
+
+                    mensagemStatus.textContent = 'PDF baixado com sucesso!';
+                } catch (erro) {
+                    console.error('[certificado] Erro ao gerar PDF:', erro);
+                    mensagemStatus.textContent = 'Não foi possível gerar o PDF. Tente novamente.';
+                } finally {
+                    btnBaixar.disabled = false;
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

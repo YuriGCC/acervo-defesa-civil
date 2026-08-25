@@ -24,6 +24,7 @@
     <meta name="theme-color" content="#ffffff">
 
     <title>Acervo de Jogos Educativos</title>
+    <link rel="stylesheet" href="assets/certificado.css">
     <style>
         body,
         html {
@@ -128,6 +129,7 @@
             outline: 3px solid #FFD700;
         }
 
+        #tela-nome-certificado,
         #tela-certificado {
             display: none;
             position: fixed;
@@ -140,32 +142,95 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow-y: auto;
         }
 
-        #tela-certificado .certificado-cartao {
+        #tela-nome-certificado .certificado-cartao {
             background: #fff;
             color: #222;
             border-radius: 16px;
             padding: clamp(20px, 4vw, 48px);
-            max-width: 560px;
+            max-width: 480px;
             width: 100%;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             border: 6px solid #FFD700;
         }
 
+        #tela-certificado .certificado-cartao {
+            background: #fff;
+            color: #222;
+            border-radius: 16px;
+            padding: clamp(16px, 3vw, 36px);
+            max-width: 760px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 6px solid #FFD700;
+            margin: auto;
+        }
+
+        #tela-nome-certificado h2,
         #tela-certificado h2 {
-            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            font-size: clamp(1.3rem, 3.5vw, 2rem);
             margin: 0 0 12px;
             color: #1e6b3c;
         }
 
-        #tela-certificado p {
-            font-size: clamp(1rem, 2.5vw, 1.3rem);
+        #tela-nome-certificado p,
+        #tela-certificado > .certificado-cartao > p {
+            font-size: clamp(0.95rem, 2.2vw, 1.2rem);
             line-height: 1.4;
-            margin: 0 0 24px;
+            margin: 0 0 20px;
         }
 
+        #input-nome-certificado {
+            width: 100%;
+            min-height: 52px;
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 2px solid #ccc;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        #input-nome-certificado:focus-visible {
+            outline: 3px solid #FFD700;
+            border-color: #FFD700;
+        }
+
+        #certificado-conteudo {
+            margin: 0 0 18px;
+        }
+
+        #tela-certificado .certificado-qr-secao {
+            margin: 0 0 20px;
+            padding-top: 16px;
+            border-top: 1px dashed #ccc;
+        }
+
+        #tela-certificado .certificado-qr-secao p {
+            font-size: clamp(0.85rem, 2vw, 1.05rem);
+            margin: 0 0 12px;
+            color: #444;
+        }
+
+        #qrcode-certificado {
+            display: flex;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        #qrcode-certificado img,
+        #qrcode-certificado canvas {
+            border-radius: 8px;
+            border: 4px solid #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #tela-nome-certificado .certificado-botoes,
         #tela-certificado .certificado-botoes {
             display: flex;
             gap: 12px;
@@ -173,6 +238,7 @@
             flex-wrap: wrap;
         }
 
+        #tela-nome-certificado button,
         #tela-certificado button {
             min-height: 48px;
             padding: 12px 22px;
@@ -194,6 +260,12 @@
             color: #222;
         }
 
+        #btn-confirmar-nome-certificado {
+            background: #1e6b3c;
+            color: #fff;
+        }
+
+        #tela-nome-certificado button:focus-visible,
         #tela-certificado button:focus-visible {
             outline: 3px solid #FFD700;
             outline-offset: 2px;
@@ -219,10 +291,28 @@
         ← Voltar ao Menu
     </button>
 
+    <div id="tela-nome-certificado" role="dialog" aria-modal="true" aria-labelledby="nome-certificado-titulo">
+        <div class="certificado-cartao">
+            <h2 id="nome-certificado-titulo">🏆 Você completou todos os jogos!</h2>
+            <p>Digite seu nome para gerar o seu certificado de Agente Mirim da Prevenção:</p>
+            <form id="form-nome-certificado">
+                <label for="input-nome-certificado" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Seu nome</label>
+                <input type="text" id="input-nome-certificado" maxlength="40" placeholder="Seu nome" autocomplete="off">
+                <div class="certificado-botoes">
+                    <button type="submit" id="btn-confirmar-nome-certificado">Gerar certificado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="tela-certificado" role="dialog" aria-modal="true" aria-labelledby="certificado-titulo">
         <div class="certificado-cartao">
-            <h2 id="certificado-titulo">🏆 Certificado de Agente Mirim</h2>
-            <p>Parabéns! Você completou todos os jogos do Acervo da Defesa Civil e agora é um Agente Mirim da prevenção!</p>
+            <h2 id="certificado-titulo">🏆 Parabéns, seu certificado está pronto!</h2>
+            <div id="certificado-conteudo" class="certificado-papel"></div>
+            <div class="certificado-qr-secao">
+                <p>Aponte a câmera do celular para o QR code para baixar seu certificado em PDF:</p>
+                <div id="qrcode-certificado"></div>
+            </div>
             <div class="certificado-botoes">
                 <button id="btn-jogar-de-novo">Jogar de novo</button>
                 <button id="btn-continuar-certificado">Continuar</button>
@@ -235,6 +325,8 @@
     <script src="config-jogos.js"></script>
     <script src="progresso.js"></script>
     <script src="evento-ponte.js"></script>
+    <script src="assets/lib/qrcode.min.js"></script>
+    <script src="assets/certificado.js"></script>
     <script src="phaser.min.js"></script>
     <script src="menu.js"></script>
     <script src="main.js"></script>

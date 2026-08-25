@@ -27,6 +27,12 @@ const config = {
 const game = new Phaser.Game(config);
 
 /**
+ * Endereço público do site (hospedado no Netlify) usado para montar o link do
+ * QR code do certificado. Precisa apontar para onde este mesmo repositório está publicado.
+ */
+const URL_CERTIFICADO_BASE = 'https://jogos-defesa-civil.netlify.app/certificado.html';
+
+/**
  * Utilitário: anuncia mensagem para leitores de tela.
  * Centralizado aqui para uso nos listeners de ponte.
  * @param {string} msg
@@ -39,13 +45,59 @@ function anunciar(msg) {
 }
 
 /**
- * Exibe a tela de certificado (todos os jogos concluídos) e foca o primeiro botão.
+ * Exibe a tela que pede o nome da criança antes de montar o certificado.
  */
-function mostrarCertificado() {
-    const el = document.getElementById('tela-certificado');
+function pedirNomeCertificado() {
+    const el = document.getElementById('tela-nome-certificado');
     if (!el) return;
     el.style.display = 'flex';
-    anunciar('Parabéns! Você completou todos os jogos e ganhou o certificado de Agente Mirim.');
+    anunciar('Parabéns! Você completou todos os jogos. Digite seu nome para gerar seu certificado de Agente Mirim.');
+    const input = document.getElementById('input-nome-certificado');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+}
+
+/**
+ * Esconde a tela de nome do certificado.
+ */
+function esconderNomeCertificado() {
+    const el = document.getElementById('tela-nome-certificado');
+    if (el) el.style.display = 'none';
+}
+
+/**
+ * Monta o certificado com o nome informado, gera o QR code de download em PDF
+ * e exibe a tela de certificado, focando o primeiro botão.
+ * @param {string} nome
+ */
+function mostrarCertificado(nome) {
+    const el = document.getElementById('tela-certificado');
+    if (!el) return;
+
+    const dataTexto = formatarDataCertificado(new Date());
+
+    const conteudo = document.getElementById('certificado-conteudo');
+    if (conteudo) {
+        conteudo.innerHTML = montarCertificadoHTML(nome, dataTexto);
+    }
+
+    const qrEl = document.getElementById('qrcode-certificado');
+    if (qrEl && typeof QRCode !== 'undefined') {
+        qrEl.innerHTML = '';
+        const url = `${URL_CERTIFICADO_BASE}?nome=${encodeURIComponent((nome || '').trim() || 'Agente Mirim')}&data=${encodeURIComponent(dataTexto)}`;
+        new QRCode(qrEl, {
+            text: url,
+            width: 160,
+            height: 160,
+            colorDark: '#000000',
+            colorLight: '#ffffff'
+        });
+    }
+
+    el.style.display = 'flex';
+    anunciar('Seu certificado de Agente Mirim está pronto. Escaneie o QR code com o celular para baixar em PDF.');
     const btn = document.getElementById('btn-jogar-de-novo');
     if (btn) btn.focus();
 }
@@ -106,7 +158,7 @@ function voltarAoMenu() {
                 }
 
                 if (typeof progressoCompleto === 'function' && progressoCompleto()) {
-                    mostrarCertificado();
+                    pedirNomeCertificado();
                 } else {
                     // Devolve o foco ao canvas do menu: sem isso o toque também fica quebrado no
                     // menu, porque o foco continua no botão "Voltar ao Menu" que acabou de ser
@@ -265,6 +317,20 @@ if (btnResetarProgresso) {
         }
 
         anunciar('Progresso reiniciado.');
+    });
+}
+
+/**
+ * Formulário de nome, exibido antes do certificado.
+ */
+const formNomeCertificado = document.getElementById('form-nome-certificado');
+if (formNomeCertificado) {
+    formNomeCertificado.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const input = document.getElementById('input-nome-certificado');
+        const nome = input ? input.value : '';
+        esconderNomeCertificado();
+        mostrarCertificado(nome);
     });
 }
 
