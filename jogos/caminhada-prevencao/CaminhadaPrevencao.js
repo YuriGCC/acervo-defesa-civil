@@ -1,15 +1,20 @@
+// Coordenadas medidas diretamente na imagem do tabuleiro (tabuleiro.png, 2481x1754px),
+// como fração da própria imagem (0 a 1) — não da tela. Isso é necessário porque a imagem
+// tem proporção diferente da tela do jogo (1920x1080) e fica com faixas vazias nas laterais
+// quando redimensionada para caber (ver posicaoNaCasa()). Cada valor foi conferido visualmente
+// contra o número impresso na casa correspondente.
 const COORDENADAS_NORM = {
-    0: { x: 447 / 1920, y: 373 / 1080 }, 1: { x: 551 / 1920, y: 387 / 1080 }, 2: { x: 649 / 1920, y: 348 / 1080 }, 3: { x: 757 / 1920, y: 290 / 1080 }, 4: { x: 847 / 1920, y: 242 / 1080 }, 5: { x: 944 / 1920, y: 205 / 1080 },
-    6: { x: 1059 / 1920, y: 227 / 1080 }, 7: { x: 1114 / 1920, y: 317 / 1080 }, 8: { x: 1089 / 1920, y: 397 / 1080 }, 9: { x: 1027 / 1920, y: 473 / 1080 }, 10: { x: 907 / 1920, y: 497 / 1080 }, 11: { x: 774 / 1920, y: 493 / 1080 },
-    12: { x: 654 / 1920, y: 483 / 1080 }, 13: { x: 551 / 1920, y: 500 / 1080 }, 14: { x: 452 / 1920, y: 513 / 1080 }, 15: { x: 364 / 1920, y: 568 / 1080 }, 16: { x: 322 / 1920, y: 647 / 1080 }, 17: { x: 307 / 1920, y: 747 / 1080 },
-    18: { x: 382 / 1920, y: 827 / 1080 }, 19: { x: 506 / 1920, y: 833 / 1080 }, 20: { x: 584 / 1920, y: 777 / 1080 }, 21: { x: 671 / 1920, y: 713 / 1080 }, 22: { x: 761 / 1920, y: 660 / 1080 }, 23: { x: 849 / 1920, y: 617 / 1080 },
-    24: { x: 962 / 1920, y: 608 / 1080 }, 25: { x: 1054 / 1920, y: 672 / 1080 }, 26: { x: 1092 / 1920, y: 777 / 1080 }, 27: { x: 1064 / 1920, y: 877 / 1080 }, 28: { x: 984 / 1920, y: 935 / 1080 }, 29: { x: 892 / 1920, y: 982 / 1080 },
-    30: { x: 804 / 1920, y: 1007 / 1080 }, 31: { x: 714 / 1920, y: 1007 / 1080 }, 32: { x: 629 / 1920, y: 1000 / 1080 }, 33: { x: 539 / 1920, y: 1005 / 1080 }, 34: { x: 432 / 1920, y: 988 / 1080 }, 35: { x: 297 / 1920, y: 958 / 1080 }
+    0: { x: 315 / 2481, y: 660 / 1754 }, 1: { x: 315 / 2481, y: 660 / 1754 }, 2: { x: 580 / 2481, y: 645 / 1754 }, 3: { x: 770 / 2481, y: 555 / 1754 }, 4: { x: 923 / 2481, y: 403 / 1754 }, 5: { x: 1065 / 2481, y: 385 / 1754 },
+    6: { x: 1215 / 2481, y: 320 / 1754 }, 7: { x: 1339 / 2481, y: 291 / 1754 }, 8: { x: 1530 / 2481, y: 505 / 1754 }, 9: { x: 1600 / 2481, y: 680 / 1754 }, 10: { x: 1330 / 2481, y: 795 / 1754 }, 11: { x: 1105 / 2481, y: 770 / 1754 },
+    12: { x: 940 / 2481, y: 800 / 1754 }, 13: { x: 765 / 2481, y: 790 / 1754 }, 14: { x: 565 / 2481, y: 850 / 1754 }, 15: { x: 420 / 2481, y: 835 / 1754 }, 16: { x: 220 / 2481, y: 955 / 1754 }, 17: { x: 200 / 2481, y: 1075 / 1754 },
+    18: { x: 190 / 2481, y: 1190 / 1754 }, 19: { x: 270 / 2481, y: 1265 / 1754 }, 20: { x: 490 / 2481, y: 1340 / 1754 }, 21: { x: 645 / 2481, y: 1260 / 1754 }, 22: { x: 775 / 2481, y: 1090 / 1754 }, 23: { x: 925 / 2481, y: 1005 / 1754 },
+    24: { x: 1075 / 2481, y: 995 / 1754 }, 25: { x: 1245 / 2481, y: 1000 / 1754 }, 26: { x: 1400 / 2481, y: 1090 / 1754 }, 27: { x: 1560 / 2481, y: 1180 / 1754 }, 28: { x: 1400 / 2481, y: 1455 / 1754 }, 29: { x: 1240 / 2481, y: 1545 / 1754 },
+    30: { x: 1150 / 2481, y: 1585 / 1754 }, 31: { x: 950 / 2481, y: 1590 / 1754 }, 32: { x: 825 / 2481, y: 1600 / 1754 }, 33: { x: 690 / 2481, y: 1595 / 1754 }, 34: { x: 520 / 2481, y: 1570 / 1754 }, 35: { x: 375 / 2481, y: 1585 / 1754 }
 };
 
 const MAPA_CASAS = {
     1: { texto: "Aconteceu um deslizamento e você ligou 199. Pule três casas.", efeito: 3 },
-    3: { texto: "Encostas cheias de lixo e entulho! Todos os jogadores voltam uma casa.", efeito: -1 },
+    3: { texto: "Encostas cheias de lixo e entulho! Todos os jogadores voltam uma casa.", efeito: -1, todosJogadores: true },
     4: { texto: "Plano de contingência atualizado, família preparada! Pule uma casa.", efeito: 1 },
     7: { texto: "Chove muito! Você acompanha o nível do Rio no ALERTABLU. Avance uma casa.", efeito: 1 },
     10: { texto: "Aprendeu o lema: 'Defesa Civil, Somos Todos Nós!' Pule duas casas.", efeito: 2 },
@@ -122,9 +127,9 @@ class Tabuleiro extends Phaser.Scene {
         // (como a TV) ele nunca deve aparecer, já que não existe navegação por teclado ali.
         this.ehDesktop = this.sys.game.device.os.desktop;
 
-        let board = this.add.image(width / 2, height / 2, 'tabuleiroImg');
+        this.board = this.add.image(width / 2, height / 2, 'tabuleiroImg');
         const boardScale = Math.min(width / 2481, height / 1754);
-        board.setScale(boardScale);
+        this.board.setScale(boardScale);
 
         // Logos de parceria: não-interativas, então nunca capturam toque/clique.
         this.add.image(30, height - 30, 'logo-uniasselvi').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
@@ -132,9 +137,9 @@ class Tabuleiro extends Phaser.Scene {
 
         for (let i = 0; i < this.numJogadores; i++) {
             let shape;
-            const posNorm = COORDENADAS_NORM[0];
-            const xBase = (posNorm.x * width) + OFFSETS[i].dx;
-            const yBase = (posNorm.y * height) + OFFSETS[i].dy;
+            const { x: xBase0, y: yBase0 } = this.posicaoNaCasa(0);
+            const xBase = xBase0 + OFFSETS[i].dx;
+            const yBase = yBase0 + OFFSETS[i].dy;
             const tam = 20;
             if (i === 0) shape = this.add.circle(xBase, yBase, tam, CORES[i]);
             else if (i === 1) shape = this.add.rectangle(xBase, yBase, tam * 1.8, tam * 1.8, CORES[i]);
@@ -201,11 +206,26 @@ class Tabuleiro extends Phaser.Scene {
         this.cursorFoco.setPosition(this.modal.x + this.btnOkRect.x, this.modal.y + this.btnOkRect.y);
     }
 
+    // Converte a coordenada normalizada de uma casa (0 a 1, relativa à própria imagem do
+    // tabuleiro) em posição real de tela — considerando que a imagem é centralizada e pode
+    // sobrar espaço nas laterais ou em cima/embaixo (a proporção da imagem não é a mesma da tela).
+    posicaoNaCasa(indice) {
+        const posNorm = COORDENADAS_NORM[indice];
+        const boardLeft = this.board.x - this.board.displayWidth / 2;
+        const boardTop = this.board.y - this.board.displayHeight / 2;
+        return {
+            x: boardLeft + (posNorm.x * this.board.displayWidth),
+            y: boardTop + (posNorm.y * this.board.displayHeight)
+        };
+    }
+
     redimensionar() {
         const { width, height } = this.scale;
+        const boardScale = Math.min(width / 2481, height / 1754);
+        this.board.setScale(boardScale).setPosition(width / 2, height / 2);
         this.jogadores.forEach((j, i) => {
-            const coord = COORDENADAS_NORM[j.posicao];
-            j.sprite.setPosition((coord.x * width) + OFFSETS[i].dx, (coord.y * height) + OFFSETS[i].dy);
+            const { x, y } = this.posicaoNaCasa(j.posicao);
+            j.sprite.setPosition(x + OFFSETS[i].dx, y + OFFSETS[i].dy);
         });
         this.btnDado.setPosition(width - 140, height - 140);
         this.painelTurno.setPosition(width - 190, 70);
@@ -241,14 +261,13 @@ class Tabuleiro extends Phaser.Scene {
 
     moverJogador(id, casas, forcar = false) {
         let j = this.jogadores[id];
-        const { width, height } = this.scale;
         const destinoFinal = Math.max(0, Math.min(j.posicao + casas, 35));
         const passo = () => {
             if (j.posicao !== destinoFinal) {
                 j.posicao += (j.posicao < destinoFinal ? 1 : -1);
-                const posNorm = COORDENADAS_NORM[j.posicao];
-                const finalX = (posNorm.x * width) + OFFSETS[id].dx;
-                const finalY = (posNorm.y * height) + OFFSETS[id].dy;
+                const { x: finalXBase, y: finalYBase } = this.posicaoNaCasa(j.posicao);
+                const finalX = finalXBase + OFFSETS[id].dx;
+                const finalY = finalYBase + OFFSETS[id].dy;
                 this.tweens.add({ targets: j.sprite, x: finalX, y: finalY, duration: this.reduzMovimento ? 80 : 400, onComplete: passo });
             } else {
                 if (!forcar) this.verificarRegra(id);
@@ -296,6 +315,24 @@ class Tabuleiro extends Phaser.Scene {
             }
             return;
         }
+
+        // Regras como a da casa 3 ("Todos os jogadores voltam uma casa") afetam todo mundo,
+        // não só quem caiu nela. Move os outros jogadores aqui; o jogador da vez segue pelo
+        // fluxo normal abaixo (que já anima e conta como o efeito dele).
+        if (regra.todosJogadores && regra.efeito) {
+            this.jogadores.forEach((jog, idx) => {
+                if (idx === this.turno) return;
+                const destino = Math.max(0, Math.min(jog.posicao + regra.efeito, 35));
+                jog.posicao = destino;
+                const { x, y } = this.posicaoNaCasa(destino);
+                this.tweens.add({
+                    targets: jog.sprite,
+                    x: x + OFFSETS[idx].dx, y: y + OFFSETS[idx].dy,
+                    duration: this.reduzMovimento ? 80 : 400
+                });
+            });
+        }
+
         if (regra.irPara !== undefined) this.moverJogador(this.turno, regra.irPara - j.posicao, true);
         else if (regra.efeito) this.moverJogador(this.turno, regra.efeito, true);
         else if (regra.pularRodada) { j.bloqueado = true; this.proximoOuGanhar(this.turno); }
