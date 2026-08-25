@@ -13,19 +13,31 @@ export default class PeDeVento extends Phaser.Scene {
         this.falar = () => {};
     }
 
+    preload() {
+        this.load.image('logo-uniasselvi', '../../assets/icone-uniasselvi.png');
+        this.load.image('logo-defesa-civil', '../../assets/logo-defesa-civil.webp');
+    }
+
     create() {
         const { width, height } = this.scale;
 
         this.falar = criarAnunciador();
         this.reduzMovimento = prefersReducedMotion();
+        // O quadro de foco (teclado) só faz sentido em computadores; em telas de toque
+        // (como a TV) ele nunca deve aparecer, já que não existe navegação por teclado ali.
+        this.ehDesktop = this.sys.game.device.os.desktop;
 
         this.createWindTexture();
 
         const bg = this.add.graphics();
-        bg.fillStyle(0x2980b9, 1); 
+        bg.fillStyle(0x2980b9, 1);
         bg.fillRect(0, 0, width, height);
-        bg.fillStyle(0x7f8c8d, 1); 
+        bg.fillStyle(0x7f8c8d, 1);
         bg.fillRect(0, height * 0.75, width, height * 0.25);
+
+        // Logos de parceria: não-interativas, então nunca capturam toque/clique.
+        this.add.image(30, height - 30, 'logo-uniasselvi').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+        this.add.image(115, height - 30, 'logo-defesa-civil').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
 
         this.add.text(width / 2, 80, 'PROTEJA A CASA DO VENTO E DA CHUVA!', {
             fontSize: '90px', fill: '#ffffff', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 8
@@ -108,8 +120,9 @@ export default class PeDeVento extends Phaser.Scene {
 
         this.cursorFoco = this.add.rectangle(0, 0, 440, 350, 0x000000, 0)
             .setStrokeStyle(8, 0xFFD700)
-            .setDepth(50);
-        if (!this.reduzMovimento) {
+            .setDepth(50)
+            .setVisible(this.ehDesktop);
+        if (this.ehDesktop && !this.reduzMovimento) {
             this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
         }
 
@@ -347,8 +360,7 @@ export default class PeDeVento extends Phaser.Scene {
             .on('pointerdown', () => this.voltarAoAcervo());
 
         this.cursorFoco.setDepth(102);
-        this.cursorFoco.width = btnSair.width + 20;
-        this.cursorFoco.height = btnSair.height + 20;
+        this.cursorFoco.setSize(btnSair.width + 20, btnSair.height + 20);
         this.cursorFoco.setPosition(btnSair.x, btnSair.y);
 
         this.falar(`${titulo} ${subTitulo} Botão Voltar ao Menu selecionado. Pressione Enter.`);

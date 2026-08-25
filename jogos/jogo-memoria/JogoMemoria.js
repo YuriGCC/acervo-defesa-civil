@@ -26,6 +26,8 @@ export default class JogoMemoria extends Phaser.Scene {
         this.load.image('img4', 'assets/defesa-civil-escola.jpeg');
         this.load.image('img5', 'assets/defesa-civil.jpeg');
         this.load.image('img6', 'assets/logo-defesa-civil.jpeg');
+        this.load.image('logo-uniasselvi', '../../assets/icone-uniasselvi.png');
+        this.load.image('logo-parceria-defesa-civil', '../../assets/logo-defesa-civil.webp');
     }
 
     create() {
@@ -33,12 +35,19 @@ export default class JogoMemoria extends Phaser.Scene {
 
         this.falar = criarAnunciador();
         this.reduzMovimento = prefersReducedMotion();
+        // O quadro de foco (teclado) só faz sentido em computadores; em telas de toque
+        // (como a TV) ele nunca deve aparecer, já que não existe navegação por teclado ali.
+        this.ehDesktop = this.sys.game.device.os.desktop;
 
         this.add.graphics().fillStyle(0x1a252f, 1).fillRect(0, 0, width, height);
 
         this.add.text(width / 2, 70, 'Jogo da Memória', {
             fontSize: '64px', fill: '#ffffff', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5);
+
+        // Logos de parceria: não-interativas, então nunca capturam toque/clique.
+        this.add.image(30, height - 30, 'logo-uniasselvi').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+        this.add.image(115, height - 30, 'logo-parceria-defesa-civil').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
 
         let deck = ['img1', 'img1', 'img2', 'img2', 'img3', 'img3', 'img4', 'img4', 'img5', 'img5', 'img6', 'img6'];
         Phaser.Utils.Array.Shuffle(deck);
@@ -90,9 +99,10 @@ export default class JogoMemoria extends Phaser.Scene {
 
         this.cursorFoco = this.add.rectangle(0, 0, 284, 224, 0xFFD700, 0)
             .setStrokeStyle(6, 0xFFD700)
-            .setDepth(50);
+            .setDepth(50)
+            .setVisible(this.ehDesktop);
 
-        if (!this.reduzMovimento) {
+        if (this.ehDesktop && !this.reduzMovimento) {
             this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 500, yoyo: true, loop: -1 });
         }
 
@@ -247,8 +257,7 @@ export default class JogoMemoria extends Phaser.Scene {
         btn.on('pointerdown', () => this.voltarAoMenu());
 
         this.cursorFoco.setDepth(102);
-        this.cursorFoco.width = btn.width + 20;
-        this.cursorFoco.height = btn.height + 20;
+        this.cursorFoco.setSize(btn.width + 20, btn.height + 20);
         this.cursorFoco.setPosition(btn.x, btn.y);
 
         this.falar('Parabéns! Você encontrou todos os pares. Botão Voltar ao Menu selecionado. Pressione Enter.');

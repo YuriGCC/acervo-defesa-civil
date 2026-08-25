@@ -419,6 +419,25 @@ body {
 
 .hidden { display: none !important; }
 
+/* Logos de parceria (Uniasselvi / Defesa Civil): decorativas, não podem atrapalhar o jogo */
+.rodape-parceria {
+    position: fixed;
+    left: 10px;
+    bottom: 10px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.rodape-parceria img {
+    height: clamp(26px, 4vw, 36px);
+    width: auto;
+    display: block;
+}
+
 /* Telas muito baixas em landscape (ex: landscape mobile) */
 @media (max-height: 480px) {
     .game-header h1 { font-size: 0.85em; }

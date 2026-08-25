@@ -86,6 +86,12 @@ window.onload = function(){
     alt4.innerText = perguntas[cont].alternativas[3].alternativa;
 
     cont++;
+    atualizarProgresso();
+}
+
+function atualizarProgresso() {
+    const el = document.getElementById('progresso-quiz');
+    if (el) el.textContent = `Pergunta ${cont} de ${perguntas.length}`;
 }
 
 
@@ -110,6 +116,8 @@ function enviar(){
         questao.style.fontWeight = 'bold'
 
         document.getElementById('alternat').style.display = 'none'
+
+        document.getElementById('progresso-quiz').style.display = 'none'
 
         document.getElementById('verificar').style.display = 'none'
         
@@ -156,6 +164,7 @@ function enviar(){
     alt4.innerText = perguntas[cont].alternativas[pos].alternativa;
 
     cont++;
+    atualizarProgresso();
 
     const enviar = document.getElementById('btn');
 

@@ -6,23 +6,23 @@
 }
 
 :root {
-    font-size: 14px;
+    font-size: 13px;
 }
 
 @media (min-width: 480px) {
-    :root { font-size: 15px; }
+    :root { font-size: 14px; }
 }
 
 @media (min-width: 768px) {
-    :root { font-size: 16px; }
+    :root { font-size: 14px; }
 }
 
 @media (min-width: 1024px) {
-    :root { font-size: 18px; }
+    :root { font-size: 15px; }
 }
 
 @media (min-width: 1920px) {
-    :root { font-size: 24px; }
+    :root { font-size: 16px; }
 }
 
 html, body {
@@ -39,7 +39,7 @@ body {
 }
 
 header {
-    padding: 0.4rem 1rem;
+    padding: 0.3rem 0.8rem;
     text-align: center;
     background-color: #557368;
     color: #2E3140;
@@ -51,7 +51,7 @@ header {
 }
 
 header h1 {
-    font-size: clamp(1rem, 3vw, 1.8rem);
+    font-size: clamp(0.9rem, 2.2vw, 1.3rem);
 }
 
 main {
@@ -72,7 +72,7 @@ a {
 }
 
 #mascote {
-    width: clamp(5rem, 15vw, 10rem);
+    width: clamp(2.5rem, 6vw, 4.5rem);
 }
 
 #alternat {
@@ -83,23 +83,33 @@ a {
     background-color: #557368;
     color: #2E3140;
     min-width: min(20rem, 95vw);
-    max-width: min(45rem, 95vw);
+    max-width: min(38rem, 90vw);
     width: 90%;
     border-radius: 0.8rem;
     box-shadow: 0.1rem 0.2rem rgba(0, 0, 0, 0.2);
-    padding-bottom: 1rem;
-    border: 0.2rem solid #b45858;
+    padding-bottom: 0.6rem;
+    border: 0.15rem solid #b45858;
+}
+
+#progresso-quiz {
+    text-align: center;
+    padding-top: 0.8rem;
+    font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+    font-weight: bold;
+    color: #ffffff;
+    opacity: 0.85;
+    letter-spacing: 0.03em;
 }
 
 #questao {
     text-align: center;
-    padding: 1.2rem 1.2rem 0.8rem;
-    font-size: clamp(0.95rem, 2.5vw, 1.3rem);
+    padding: 0.8rem 1rem 0.5rem;
+    font-size: clamp(0.8rem, 1.3vw, 0.95rem);
     font-weight: bold;
 }
 
 .opcoes {
-    margin: 0 1rem 0.8rem 1rem;
+    margin: 0 0.8rem 0.5rem 0.8rem;
     display: flex;
     align-items: center;
 }
@@ -110,22 +120,23 @@ a {
     margin: 0.2rem;
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    padding: 0.7rem 1rem;
+    gap: 0.6rem;
+    padding: 0.45rem 0.75rem;
     width: 100%;
     height: auto;
-    border-radius: 1.5rem;
+    border-radius: 1.2rem;
     cursor: pointer;
     text-align: left;
     transition: 0.3s;
     word-break: break-word;
-    min-height: 3rem;
+    /* WCAG 2.5.5: alvo de toque próximo de 44px, mesmo com o texto menor */
+    min-height: 2.8rem;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
 }
 
 .letra {
-    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-size: clamp(0.75rem, 1.2vw, 0.9rem);
     font-weight: bold;
     margin-left: 0.3rem;
     flex-shrink: 0;
@@ -133,7 +144,7 @@ a {
 
 .alter {
     color: #2E3140;
-    font-size: clamp(0.85rem, 2vw, 1.2rem);
+    font-size: clamp(0.7rem, 1.1vw, 0.85rem);
     display: flex;
     align-items: center;
     flex: 1 1 0;
@@ -154,9 +165,9 @@ a {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.8rem;
-    padding: 0 0.8rem;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding: 0 0.6rem;
 }
 
 .b {
@@ -164,13 +175,14 @@ a {
     background-color: #86a882;
     display: inline-block;
     margin: 0.2rem;
-    padding: 0.6rem 1rem;
-    border-radius: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.6rem;
     border: none;
     transition: all 0.3s;
-    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    font-size: clamp(0.75rem, 1.4vw, 0.95rem);
     font-weight: bold;
-    min-width: 6rem;
+    min-width: 4.5rem;
+    min-height: 2.6rem;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -201,7 +213,7 @@ a {
 }
 
 .amoraPonto {
-    width: clamp(5rem, 18vw, 12rem);
+    width: clamp(3.5rem, 12vw, 7rem);
 }
 
 footer {
@@ -229,14 +241,33 @@ footer {
 
 /* Landscape mobile */
 @media (max-height: 500px) {
-    #questao { padding: 0.6rem 1rem; }
-    .opcoes { margin-bottom: 0.4rem; }
-    .botao { padding: 0.4rem 0.8rem; min-height: 2.5rem; }
-    #paiBotoes { margin-top: 0.4rem; }
+    #questao { padding: 0.4rem 0.8rem; }
+    .opcoes { margin-bottom: 0.3rem; }
+    .botao { padding: 0.25rem 0.6rem; min-height: 1.8rem; }
+    #paiBotoes { margin-top: 0.3rem; }
+}
+
+/* Logos de parceria (Uniasselvi / Defesa Civil): decorativas, não podem atrapalhar o jogo */
+.rodape-parceria {
+    position: fixed;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.rodape-parceria img {
+    height: clamp(1.6rem, 4vw, 2.2rem);
+    width: auto;
+    display: block;
 }
 
 /* Telas muito pequenas */
 @media (max-width: 360px) {
-    #mascote { width: 5rem; }
-    .letra { font-size: 0.9rem; }
+    #mascote { width: 2.2rem; }
+    .letra { font-size: 0.7rem; }
 }

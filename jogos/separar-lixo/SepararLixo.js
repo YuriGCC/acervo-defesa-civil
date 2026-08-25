@@ -32,12 +32,17 @@ export default class SepararLixo extends Phaser.Scene {
         this.load.image('item_plastico', 'assets/plastico.png');
         this.load.image('item_vidro', 'assets/vidro.png');
         this.load.image('item_organico', 'assets/organico.png');
+        this.load.image('logo-uniasselvi', '../../assets/icone-uniasselvi.png');
+        this.load.image('logo-defesa-civil', '../../assets/logo-defesa-civil.webp');
     }
 
     create() {
         // Reset de variáveis
         this.falar = criarAnunciador();
         this.reduzMovimento = prefersReducedMotion();
+        // O quadro de foco (teclado) só faz sentido em computadores; em telas de toque
+        // (como a TV) ele nunca deve aparecer, já que não existe navegação por teclado ali.
+        this.ehDesktop = this.sys.game.device.os.desktop;
         this.lixosEmCena = [];
         this.lixeirasEmCena = [];
         this.score = 0;
@@ -61,8 +66,13 @@ export default class SepararLixo extends Phaser.Scene {
             this.tweens.add({ targets: textoChamada, scale: 1.05, duration: 1000, yoyo: true, loop: -1 });
         }
 
+        // Logos de parceria: não-interativas, então nunca capturam toque/clique.
+        // Ficam um pouco mais acima para não sobrepor a legenda de teclado no rodapé.
+        this.add.image(30, height - 100, 'logo-uniasselvi').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+        this.add.image(115, height - 100, 'logo-defesa-civil').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+
         // Legenda de acessibilidade de teclado (apenas computadores), criada uma única vez
-        if (this.sys.game.device.os.desktop) {
+        if (this.ehDesktop) {
             this.add.text(width / 2, height - 35, '⌨️ TECLADO: Use Setas para navegar | ENTER para selecionar | ESC para soltar', {
                 fontSize: '22px',
                 fill: '#aaaaaa',
@@ -102,7 +112,7 @@ export default class SepararLixo extends Phaser.Scene {
             .setVisible(false);
 
         // Faz o cursor pulsar para chamar atenção
-        if (!this.reduzMovimento) {
+        if (this.ehDesktop && !this.reduzMovimento) {
             this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
         }
 
@@ -330,11 +340,12 @@ export default class SepararLixo extends Phaser.Scene {
         const item = this.lixosEmCena[indice];
         if (!item) return;
 
-        this.cursorFoco.setVisible(true);
-        this.cursorFoco.width = item.displayWidth + 30;
-        this.cursorFoco.height = item.displayHeight + 30;
-        this.cursorFoco.setPosition(item.x, item.y);
-        
+        if (this.ehDesktop) {
+            this.cursorFoco.setVisible(true);
+            this.cursorFoco.setSize(item.displayWidth + 30, item.displayHeight + 30);
+            this.cursorFoco.setPosition(item.x, item.y);
+        }
+
         this.falar(`Lixo: ${item.getData('nome_acessivel')}. ${indice + 1} de ${this.lixosEmCena.length}. Pressione Enter para selecionar.`);
     }
 
@@ -342,11 +353,12 @@ export default class SepararLixo extends Phaser.Scene {
         const lixeira = this.lixeirasEmCena[indice];
         if (!lixeira) return;
 
-        this.cursorFoco.setVisible(true);
-        this.cursorFoco.width = 300;
-        this.cursorFoco.height = 420;
-        this.cursorFoco.setPosition(lixeira.x, lixeira.y);
-        
+        if (this.ehDesktop) {
+            this.cursorFoco.setVisible(true);
+            this.cursorFoco.setSize(300, 420);
+            this.cursorFoco.setPosition(lixeira.x, lixeira.y);
+        }
+
         this.falar(`${lixeira.getData('nome_acessivel')}.`);
     }
 
@@ -373,10 +385,11 @@ export default class SepararLixo extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(1001).setInteractive({ useHandCursor: true });
 
         // Foco Visual no Fim
-        this.cursorFoco.setVisible(true).setDepth(1002);
-        this.cursorFoco.width = this.btnVoltar.width + 20;
-        this.cursorFoco.height = this.btnVoltar.height + 20;
-        this.cursorFoco.setPosition(this.btnVoltar.x, this.btnVoltar.y);
+        if (this.ehDesktop) {
+            this.cursorFoco.setVisible(true).setDepth(1002);
+            this.cursorFoco.setSize(this.btnVoltar.width + 20, this.btnVoltar.height + 20);
+            this.cursorFoco.setPosition(this.btnVoltar.x, this.btnVoltar.y);
+        }
 
         this.estadoTeclado = 'FIM';
         this.falar("Você ganhou! Muito bem. Botão Voltar ao Menu selecionado. Pressione Enter.");

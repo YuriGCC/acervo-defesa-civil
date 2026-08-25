@@ -34,6 +34,7 @@ class Menu extends Phaser.Scene {
         const { width, height } = this.scale;
         this.falar = criarAnunciador();
         this.reduzMovimento = prefersReducedMotion();
+        this.ehDesktop = this.sys.game.device.os.desktop;
 
         this.add.graphics().fillGradientStyle(0x1a2a6c, 0x1a2a6c, 0xb21f1f, 0xfdbb2d, 1).fillRect(0, 0, width, height);
         this.add.text(width / 2, height * 0.2, 'CAMINHADA DA PREVENÇÃO', { fontSize: '65px', fill: '#fff', fontFamily: 'Arial Black', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5);
@@ -56,8 +57,8 @@ class Menu extends Phaser.Scene {
         });
 
         this.indiceFoco = 0;
-        this.cursorFoco = this.add.rectangle(0, 0, 220, 220, 0x000000, 0).setStrokeStyle(8, 0xFFD700).setDepth(50);
-        if (!this.reduzMovimento) {
+        this.cursorFoco = this.add.rectangle(0, 0, 220, 220, 0x000000, 0).setStrokeStyle(8, 0xFFD700).setDepth(50).setVisible(this.ehDesktop);
+        if (this.ehDesktop && !this.reduzMovimento) {
             this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
         }
 
@@ -108,15 +109,26 @@ class Tabuleiro extends Phaser.Scene {
         this.estaMovendo = false;
         this.popupAberto = false;
     }
-    preload() { this.load.image('tabuleiroImg', 'tabuleiro.png'); }
+    preload() {
+        this.load.image('tabuleiroImg', 'tabuleiro.png');
+        this.load.image('logo-uniasselvi', '../../assets/icone-uniasselvi.png');
+        this.load.image('logo-defesa-civil', '../../assets/logo-defesa-civil.webp');
+    }
     create() {
         const { width, height } = this.scale;
         this.falar = criarAnunciador();
         this.reduzMovimento = prefersReducedMotion();
+        // O quadro de foco (teclado) só faz sentido em computadores; em telas de toque
+        // (como a TV) ele nunca deve aparecer, já que não existe navegação por teclado ali.
+        this.ehDesktop = this.sys.game.device.os.desktop;
 
         let board = this.add.image(width / 2, height / 2, 'tabuleiroImg');
         const boardScale = Math.min(width / 2481, height / 1754);
         board.setScale(boardScale);
+
+        // Logos de parceria: não-interativas, então nunca capturam toque/clique.
+        this.add.image(30, height - 30, 'logo-uniasselvi').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+        this.add.image(115, height - 30, 'logo-defesa-civil').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
 
         for (let i = 0; i < this.numJogadores; i++) {
             let shape;
@@ -132,13 +144,13 @@ class Tabuleiro extends Phaser.Scene {
             this.jogadores.push({ sprite: shape, posicao: 0, bloqueado: false });
         }
         this.stars = this.add.particles(0, 0, null, { speed: { min: 100, max: 300 }, angle: { min: 0, max: 360 }, scale: { start: 0.6, end: 0 }, lifespan: 800, emitting: false });
-        this.painelTurno = this.add.container(width - 320, 130).setAlpha(0);
-        this.bgTurno = this.add.rectangle(0, 0, 550, 130, CORES[0], 1).setStrokeStyle(6, 0xffffff);
-        this.txtTurno = this.add.text(0, 0, `VEZ: JOGADOR 1`, { fontSize: '48px', fill: '#fff', fontFamily: 'Arial Black' }).setOrigin(0.5);
+        this.painelTurno = this.add.container(width - 220, 90).setAlpha(0);
+        this.bgTurno = this.add.rectangle(0, 0, 350, 85, CORES[0], 1).setStrokeStyle(4, 0xffffff);
+        this.txtTurno = this.add.text(0, 0, `VEZ: JOGADOR 1`, { fontSize: '30px', fill: '#fff', fontFamily: 'Arial Black' }).setOrigin(0.5);
         this.painelTurno.add([this.bgTurno, this.txtTurno]);
-        this.btnDado = this.add.container(width - 250, height - 250).setAlpha(0);
-        let fundoB = this.add.circle(0, 0, 180, 0xffffff).setStrokeStyle(15, 0x333333).setInteractive({ useHandCursor: true });
-        this.txtDado = this.add.text(0, 0, '🎲', { fontSize: '160px', fill: '#000', fontFamily: 'Arial Black' }).setOrigin(0.5);
+        this.btnDado = this.add.container(width - 160, height - 160).setAlpha(0);
+        let fundoB = this.add.circle(0, 0, 110, 0xffffff).setStrokeStyle(10, 0x333333).setInteractive({ useHandCursor: true });
+        this.txtDado = this.add.text(0, 0, '🎲', { fontSize: '100px', fill: '#000', fontFamily: 'Arial Black' }).setOrigin(0.5);
         this.btnDado.add([fundoB, this.txtDado]);
         fundoB.on('pointerdown', () => { if (!this.estaMovendo && !this.popupAberto) this.lancarDado(); });
         this.modal = this.add.container(width / 2, height / 2).setDepth(200).setAlpha(0).setScale(0.5);
@@ -149,8 +161,8 @@ class Tabuleiro extends Phaser.Scene {
         this.modal.add([fundoM, this.txtModal, this.btnOkRect, this.txtOk]);
         this.btnOkRect.on('pointerdown', () => this.fecharModal());
 
-        this.cursorFoco = this.add.rectangle(0, 0, 380, 380, 0x000000, 0).setStrokeStyle(8, 0xFFD700).setDepth(250);
-        if (!this.reduzMovimento) {
+        this.cursorFoco = this.add.rectangle(0, 0, 380, 380, 0x000000, 0).setStrokeStyle(8, 0xFFD700).setDepth(250).setVisible(false);
+        if (this.ehDesktop && !this.reduzMovimento) {
             this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
         }
 
@@ -176,16 +188,16 @@ class Tabuleiro extends Phaser.Scene {
     }
 
     atualizarFocoDado() {
+        if (!this.ehDesktop) return;
         this.cursorFoco.setVisible(true);
-        this.cursorFoco.width = 380;
-        this.cursorFoco.height = 380;
+        this.cursorFoco.setSize(250, 250);
         this.cursorFoco.setPosition(this.btnDado.x, this.btnDado.y);
     }
 
     atualizarFocoModal() {
+        if (!this.ehDesktop) return;
         this.cursorFoco.setVisible(true);
-        this.cursorFoco.width = this.btnOkRect.width + 30;
-        this.cursorFoco.height = this.btnOkRect.height + 30;
+        this.cursorFoco.setSize(this.btnOkRect.width + 30, this.btnOkRect.height + 30);
         this.cursorFoco.setPosition(this.modal.x + this.btnOkRect.x, this.modal.y + this.btnOkRect.y);
     }
 
@@ -195,8 +207,8 @@ class Tabuleiro extends Phaser.Scene {
             const coord = COORDENADAS_NORM[j.posicao];
             j.sprite.setPosition((coord.x * width) + OFFSETS[i].dx, (coord.y * height) + OFFSETS[i].dy);
         });
-        this.btnDado.setPosition(width - 200, height - 200);
-        this.painelTurno.setPosition(width - 250, 100);
+        this.btnDado.setPosition(width - 140, height - 140);
+        this.painelTurno.setPosition(width - 190, 70);
         this.modal.setPosition(width / 2, height / 2);
         if (this.popupAberto) this.atualizarFocoModal();
         else this.atualizarFocoDado();
@@ -212,10 +224,10 @@ class Tabuleiro extends Phaser.Scene {
         this.time.addEvent({
             delay: 70, repeat: 20,
             callback: () => {
-                this.txtDado.setText(Phaser.Math.Between(1, 6)).setFontSize(140);
+                this.txtDado.setText(Phaser.Math.Between(1, 6)).setFontSize(90);
                 if (++giros > 20) {
                     const final = Phaser.Math.Between(1, 6);
-                    this.txtDado.setText(final).setFontSize(180).setFill('#e67e22');
+                    this.txtDado.setText(final).setFontSize(110).setFill('#e67e22');
                     this.cursorFoco.setVisible(false);
                     if (!this.reduzMovimento) {
                         this.tweens.add({ targets: this.btnDado, scale: 1.25, duration: 250, yoyo: true });
@@ -309,7 +321,7 @@ class Tabuleiro extends Phaser.Scene {
         } else {
             this.bgTurno.setFillStyle(CORES[this.turno]);
             this.txtTurno.setText(`VEZ: JOGADOR ${this.turno + 1}`);
-            this.txtDado.setText('🎲').setFontSize(130).setFill('#000');
+            this.txtDado.setText('🎲').setFontSize(85).setFill('#000');
             this.estaMovendo = false;
             this.mostrarInterface(true);
             this.atualizarFocoDado();

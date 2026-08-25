@@ -216,7 +216,10 @@ window.ponte.quando('TROCAR_JOGO', (dados) => {
         anunciar(`Jogo "${dados.nome}" iniciado. Use o botão Voltar ao Menu para retornar.`);
     };
 
-    iframe.addEventListener('load', onIframeLoad);
+    // { once: true }: sem isso, quando o iframe é desmontado (src trocado para
+    // about:blank ao voltar ao menu), esse mesmo evento 'load' dispara de novo e
+    // reexibe o botão "Voltar ao Menu" logo depois de ele ter sido escondido.
+    iframe.addEventListener('load', onIframeLoad, { once: true });
 
     containerJogo.appendChild(iframe);
 

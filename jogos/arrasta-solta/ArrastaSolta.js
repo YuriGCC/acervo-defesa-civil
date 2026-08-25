@@ -67,18 +67,32 @@ export default class ArrastaSolta extends Phaser.Scene {
         ];
     }
 
+    preload() {
+        this.load.image('logo-uniasselvi', '../../assets/icone-uniasselvi.png');
+        this.load.image('logo-defesa-civil', '../../assets/logo-defesa-civil.webp');
+    }
+
     create() {
+        const { height } = this.scale;
         this.falar = criarAnunciador();
         this.reduzMovimento = prefersReducedMotion();
+        // O quadro de foco (teclado) só faz sentido em computadores; em telas de toque
+        // (como a TV) ele nunca deve aparecer, já que não existe navegação por teclado ali.
+        this.ehDesktop = this.sys.game.device.os.desktop;
 
         this.input.dragDistanceThreshold = 5;
 
         this.desenharEstrutura();
 
+        // Logos de parceria: não-interativas, então nunca capturam toque/clique.
+        this.add.image(30, height - 30, 'logo-uniasselvi').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+        this.add.image(115, height - 30, 'logo-defesa-civil').setOrigin(0, 1).setDisplaySize(70, 70).setAlpha(0.75);
+
         this.cursorFoco = this.add.rectangle(0, 0, 200, 80, 0x000000, 0)
             .setStrokeStyle(6, 0xFFD700)
-            .setDepth(500);
-        if (!this.reduzMovimento) {
+            .setDepth(500)
+            .setVisible(this.ehDesktop);
+        if (this.ehDesktop && !this.reduzMovimento) {
             this.tweens.add({ targets: this.cursorFoco, alpha: 0.5, duration: 400, yoyo: true, loop: -1 });
         }
 
@@ -112,9 +126,10 @@ export default class ArrastaSolta extends Phaser.Scene {
     atualizarFocoVisual() {
         const alvo = this.navegaveis[this.indiceFoco];
         if (!alvo) return;
-        this.cursorFoco.setPosition(alvo.x, alvo.y);
-        this.cursorFoco.width = alvo.width + 30;
-        this.cursorFoco.height = alvo.height + 30;
+        if (this.ehDesktop) {
+            this.cursorFoco.setPosition(alvo.x, alvo.y);
+            this.cursorFoco.setSize(alvo.width + 30, alvo.height + 30);
+        }
 
         if (alvo === this.botaoContinuar) {
             this.falar(`Botão: ${alvo.text}. Pressione Enter para confirmar.`);
@@ -150,9 +165,10 @@ export default class ArrastaSolta extends Phaser.Scene {
     atualizarFocoZona() {
         const zonaId = this.indiceZonaFoco === 0 ? 'zona1' : 'zona2';
         const pos = this.zonasPos[zonaId];
-        this.cursorFoco.setPosition(pos.x, pos.y);
-        this.cursorFoco.width = pos.w + 20;
-        this.cursorFoco.height = pos.h + 20;
+        if (this.ehDesktop) {
+            this.cursorFoco.setPosition(pos.x, pos.y);
+            this.cursorFoco.setSize(pos.w + 20, pos.h + 20);
+        }
         this.falar(`Zona: ${this[zonaId + '_label'].text}.`);
     }
 
